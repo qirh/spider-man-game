@@ -34,31 +34,26 @@ test("calculateScore: empty answers gives score 0 and full possible total", () =
   assert.strictEqual(total, MAX_SCORE);
 });
 
-test("calculateScore: trick MC accepts every listed correct index", () => {
-  const idx = QUESTIONS.findIndex((q) => Array.isArray(q.answer));
-  assert.ok(idx >= 0, "expected at least one trick MC in QUESTIONS");
-
-  for (const correctIdx of QUESTIONS[idx].answer) {
-    const answers = [];
-    answers[idx] = correctIdx;
-    const { score } = calculateScore(answers);
-    assert.strictEqual(
-      score,
-      1,
-      `picking choice ${correctIdx} should score 1`,
-    );
-  }
+test("multiple-choice questions put the correct answer first", () => {
+  QUESTIONS.forEach((q, idx) => {
+    if (q.type !== "mc") return;
+    assert.strictEqual(q.answer, 0, `question ${idx + 1}`);
+    assert.ok(q.choices[0], `question ${idx + 1} should have a first choice`);
+  });
 });
 
-test("calculateScore: trick MC rejects choices not in the accepted list", () => {
-  const idx = QUESTIONS.findIndex((q) => Array.isArray(q.answer));
-  const wrongIdx = [0, 1, 2, 3].find(
-    (i) => !QUESTIONS[idx].answer.includes(i),
-  );
-  const answers = [];
-  answers[idx] = wrongIdx;
-  const { score } = calculateScore(answers);
-  assert.strictEqual(score, 0);
+test("calculateScore: multiple-choice questions score only first choices", () => {
+  QUESTIONS.forEach((q, idx) => {
+    if (q.type !== "mc") return;
+
+    const correct = [];
+    correct[idx] = 0;
+    assert.strictEqual(calculateScore(correct).score, 1, `question ${idx + 1}`);
+
+    const wrong = [];
+    wrong[idx] = 1;
+    assert.strictEqual(calculateScore(wrong).score, 0, `question ${idx + 1}`);
+  });
 });
 
 test("calculateScore: fill-in is case-insensitive and trims whitespace", () => {
