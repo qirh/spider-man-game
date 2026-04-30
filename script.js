@@ -303,7 +303,7 @@ function nextQuestion() {
     state.screen = "results";
   }
   render();
-  window.scrollTo({ top: 0, behavior: "instant" });
+  scrollToTop();
 }
 
 function prevQuestion() {
@@ -314,6 +314,42 @@ function prevQuestion() {
     state.qIndex--;
   }
   render();
+  scrollToTop();
+}
+
+function prevQuestionFromKeyboard() {
+  if (state.screen === "results") {
+    cancelActiveMatchDrag();
+    state.screen = "question";
+    state.qIndex = QUESTIONS.length - 1;
+    render();
+    scrollToTop();
+    return;
+  }
+
+  prevQuestion();
+}
+
+function nextQuestionFromKeyboard() {
+  const q = QUESTIONS[state.qIndex];
+  if (!canKeyboardAdvance(q)) {
+    showRequiredChoiceFeedback(q);
+    return;
+  }
+
+  nextQuestion();
+}
+
+function canKeyboardAdvance(q) {
+  return !q.requireCorrect || isCorrectChoice(q, state.answers[state.qIndex]);
+}
+
+function showRequiredChoiceFeedback(q) {
+  const feedback = document.querySelector(".choice-error");
+  if (feedback) feedback.textContent = q.wrongMessage || "Wrong answer";
+}
+
+function scrollToTop() {
   window.scrollTo({ top: 0, behavior: "instant" });
 }
 
@@ -647,6 +683,8 @@ window.addEventListener("resize", () => {
 });
 
 document.addEventListener("keydown", (e) => {
+  if (handleArrowNavigation(e)) return;
+
   if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
 
   if (state.screen === "question") {
@@ -678,5 +716,35 @@ document.addEventListener("keydown", (e) => {
     }
   }
 });
+
+function handleArrowNavigation(e) {
+  if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return false;
+  if (e.altKey || e.ctrlKey || e.metaKey) return false;
+
+  if (state.screen === "welcome") {
+    if (e.key === "ArrowRight") {
+      e.preventDefault();
+      startQuiz();
+      return true;
+    }
+    return false;
+  }
+
+  if (state.screen === "results") {
+    if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      prevQuestionFromKeyboard();
+      return true;
+    }
+    return false;
+  }
+
+  if (state.screen !== "question") return false;
+
+  e.preventDefault();
+  if (e.key === "ArrowLeft") prevQuestionFromKeyboard();
+  else nextQuestionFromKeyboard();
+  return true;
+}
 
 render();
