@@ -124,7 +124,7 @@ function renderWelcome() {
       <div class="thread"></div>
       <div class="spider">🕷️</div>
     </div>
-    <h1 class="title">SPIDER<br/>TRIVIA</h1>
+    <h1 class="title">SPIDER-MAN<br/>CHALLENGE</h1>
     <p class="tagline">Test your spidey-sense</p>
   `;
   const btn = el("button", "btn btn-bottom", "BEGIN");
