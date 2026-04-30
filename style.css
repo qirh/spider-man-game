@@ -388,7 +388,7 @@ main {
 .match-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 28px 32px;
+  gap: 28px 56px;
   margin-bottom: 18px;
   position: relative;
   touch-action: none;
