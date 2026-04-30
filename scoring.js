@@ -18,8 +18,8 @@ const QUESTIONS = [
   },
   {
     type: "mc",
-    prompt: "What does Spider-Man shoot from his wrists?",
-    choices: ["Lasers", "Silly string", "Webs", "Confetti"],
+    prompt: "What year did not have a Spider-Man movie come out?",
+    choices: ["2002", "2012", "2013", "2021"],
     answer: 2,
   },
   {
