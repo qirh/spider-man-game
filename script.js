@@ -15,6 +15,7 @@ const QUESTIONS = [
     prompt: "WITH GREAT POWER COMES GREAT _______",
     placeholder: "your answer",
     answer: "responsibility",
+    hint: "responsabilidad in spanish",
     label: "FILL IN THE BLANK",
   },
   {
@@ -91,6 +92,7 @@ const state = {
 };
 
 const focusedFills = new Set();
+const revealedHints = new Set();
 let prevScreenKey = null;
 
 const app = document.getElementById("app");
@@ -139,6 +141,7 @@ function startQuiz() {
   state.answers = [];
   state.matchSelectedLeft = null;
   focusedFills.clear();
+  revealedHints.clear();
   render();
 }
 
@@ -218,6 +221,22 @@ function renderFill(screen, q) {
     }
   });
   screen.appendChild(input);
+
+  if (q.hint) {
+    const wrap = el("div", "hint-wrap");
+    if (revealedHints.has(state.qIndex)) {
+      wrap.appendChild(el("div", "hint-text", `💡 ${q.hint}`));
+    } else {
+      const hintBtn = el("button", "hint-btn", "💡 NEED A HINT?");
+      hintBtn.addEventListener("click", () => {
+        revealedHints.add(state.qIndex);
+        wrap.innerHTML = "";
+        wrap.appendChild(el("div", "hint-text", `💡 ${q.hint}`));
+      });
+      wrap.appendChild(hintBtn);
+    }
+    screen.appendChild(wrap);
+  }
 
   const next = nextButton();
   next.disabled = !(state.answers[state.qIndex] || "").trim();
