@@ -1,4 +1,4 @@
-# Spider-Trivia
+# Spider-Man Sunnyside Challenge
 
 A mobile-first, single-page Spider-Man trivia game. Vanilla HTML/CSS/JS — no build step, no dependencies.
 
@@ -6,13 +6,13 @@ A mobile-first, single-page Spider-Man trivia game. Vanilla HTML/CSS/JS — no b
 
 ## What's in the game
 
-Six questions across three formats:
+Eleven questions across three formats:
 
-- **Multiple choice** — pick the right answer from four options
-- **Jeopardy-style fill-in-the-blank** — type the missing word (case-insensitive)
-- **Picture matching** — pair each villain with their real name (tap-to-pair)
+- **Multiple choice** — pick the right answer from four options (use the 1-4 keys on desktop)
+- **Jeopardy-style fill-in-the-blank** — type the missing word (case-insensitive); some questions have a hint button
+- **Picture matching** — pair each villain with their real name (tap-to-pair, with connecting lines drawn between matches)
 
-Max score is 9. The results screen shows a per-section breakdown and a Spider-Man-themed rank from "Civilian" to "Spider-Sense Master."
+Max score is 14 — eight 1-point multiple-choice questions, two 1-point fill-ins, and one matching round worth 4 points. The results screen shows a per-question breakdown plus the full Spider-Man-themed rank ladder from "Civilian" to "Spider-Sense Master," with the rank you earned highlighted.
 
 ## Run locally
 
@@ -27,4 +27,14 @@ Or serve over HTTP (useful for testing on a phone over the same Wi-Fi):
 ```sh
 python3 -m http.server 5555
 # then visit http://<your-mac-ip>:5555/ on your phone
+```
+
+## Tests
+
+The pure scoring logic (questions, ranks, score calculation) lives in `scoring.js` so it can run in both the browser and Node. Tests use Node's built-in test runner — no install needed:
+
+```sh
+node --test tests/
+# or
+npm test
 ```

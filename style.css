@@ -84,7 +84,7 @@ main {
 
 /* ---------- Buttons ---------- */
 .btn {
-  font-family: "Bangers", cursive;
+  font-family: "Marvel", "Bangers", cursive;
   font-size: 28px;
   letter-spacing: 3px;
   background: var(--spider-red);
@@ -121,7 +121,7 @@ main {
   background: transparent;
   border: none;
   color: var(--muted);
-  font-family: "Bangers", cursive;
+  font-family: "Marvel", "Bangers", cursive;
   font-size: 18px;
   letter-spacing: 2px;
   padding: 6px 4px;
@@ -173,9 +173,9 @@ main {
 }
 
 .title {
-  font-family: "Bangers", cursive;
-  font-size: clamp(56px, 19vw, 96px);
-  letter-spacing: 3px;
+  font-family: "Marvel", "Bangers", cursive;
+  font-size: clamp(48px, 15vw, 84px);
+  letter-spacing: 2px;
   color: var(--spider-red);
   text-align: center;
   line-height: 0.95;
@@ -219,7 +219,7 @@ main {
 }
 
 .q-label {
-  font-family: "Bangers", cursive;
+  font-family: "Marvel", "Bangers", cursive;
   font-size: 16px;
   letter-spacing: 3px;
   color: var(--spider-red);
@@ -248,12 +248,15 @@ main {
   font-family: "Inter", sans-serif;
   font-size: 16px;
   font-weight: 500;
-  padding: 16px 18px;
+  padding: 14px 16px;
   border-radius: 12px;
   text-align: left;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s, transform 0.1s;
   -webkit-tap-highlight-color: transparent;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .choice:active {
@@ -264,6 +267,30 @@ main {
   background: var(--spider-red);
   border-color: var(--spider-white);
   font-weight: 600;
+}
+
+.choice-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 6px;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
+  flex-shrink: 0;
+}
+
+.choice.selected .choice-num {
+  border-color: var(--spider-white);
+  color: var(--spider-white);
+}
+
+.choice-text {
+  flex: 1;
 }
 
 /* ---------- Fill-in-the-blank (Jeopardy) ---------- */
@@ -280,7 +307,7 @@ main {
 }
 
 .jeopardy-prompt {
-  font-family: "Bangers", cursive;
+  font-family: "Marvel", "Bangers", cursive;
   font-size: 26px;
   color: var(--gold);
   text-align: center;
@@ -310,6 +337,45 @@ main {
   box-shadow: 0 0 0 3px rgba(230, 36, 41, 0.25);
 }
 
+.hint-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 22px;
+}
+
+.hint-btn {
+  background: transparent;
+  border: 2px dashed var(--gold);
+  color: var(--gold);
+  font-family: "Marvel", "Bangers", cursive;
+  font-size: 16px;
+  letter-spacing: 2px;
+  padding: 8px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s, color 0.15s;
+}
+
+.hint-btn:active {
+  background: var(--gold);
+  color: var(--spider-black);
+}
+
+.hint-text {
+  color: var(--gold);
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  font-style: italic;
+  text-align: center;
+  padding: 10px 16px;
+  border: 2px solid var(--gold);
+  border-radius: 8px;
+  background: rgba(245, 197, 24, 0.08);
+  animation: fade-in 0.25s ease-out;
+}
+
 /* ---------- Picture matching ---------- */
 .match-help {
   font-size: 13px;
@@ -321,14 +387,48 @@ main {
 .match-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: 28px 32px;
   margin-bottom: 18px;
+  position: relative;
+}
+
+.match-lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 1;
+}
+
+.match-lines line {
+  stroke: var(--gold);
+  stroke-width: 3;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 4px rgba(245, 197, 24, 0.4));
+  stroke-dasharray: 400;
+  stroke-dashoffset: 400;
+  animation: draw-line 0.4s ease-out forwards;
+}
+
+.match-lines circle {
+  fill: var(--gold);
+  filter: drop-shadow(0 0 3px rgba(245, 197, 24, 0.5));
+}
+
+@keyframes draw-line {
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 
 .match-col {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 28px;
+  position: relative;
+  z-index: 2;
 }
 
 .match-item {
@@ -382,7 +482,7 @@ main {
   border-radius: 50%;
   width: 24px;
   height: 24px;
-  font-family: "Bangers", cursive;
+  font-family: "Marvel", "Bangers", cursive;
   font-size: 14px;
   font-weight: 700;
   display: flex;
@@ -394,7 +494,7 @@ main {
 
 /* ---------- Results ---------- */
 .results-eyebrow {
-  font-family: "Bangers", cursive;
+  font-family: "Marvel", "Bangers", cursive;
   font-size: 18px;
   letter-spacing: 4px;
   color: var(--spider-red);
@@ -408,7 +508,7 @@ main {
 }
 
 .score-number {
-  font-family: "Bangers", cursive;
+  font-family: "Marvel", "Bangers", cursive;
   font-size: clamp(96px, 32vw, 144px);
   color: var(--spider-red);
   letter-spacing: 4px;
@@ -421,7 +521,7 @@ main {
 }
 
 .score-total {
-  font-family: "Bangers", cursive;
+  font-family: "Marvel", "Bangers", cursive;
   font-size: 30px;
   color: var(--muted);
   letter-spacing: 2px;
@@ -439,24 +539,84 @@ main {
   }
 }
 
-.rank-title {
-  font-family: "Bangers", cursive;
-  font-size: clamp(32px, 9vw, 44px);
-  color: var(--gold);
-  letter-spacing: 2px;
-  text-align: center;
-  margin-top: 18px;
-  text-shadow: 2px 2px 0 var(--spider-black);
-  line-height: 1.05;
+.rank-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 24px 0 0;
 }
 
-.rank-blurb {
-  text-align: center;
-  font-size: 15px;
+.rank-row {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 14px;
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  opacity: 0.5;
+  transition: opacity 0.2s, background 0.2s, border-color 0.2s;
+}
+
+.rank-row.achieved {
+  opacity: 1;
+}
+
+.rank-row.current {
+  background: rgba(245, 197, 24, 0.12);
+  border-color: var(--gold);
+  box-shadow: 0 0 0 1px var(--gold), 0 6px 18px rgba(245, 197, 24, 0.18);
+  opacity: 1;
+}
+
+.rank-row-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.rank-row-title {
+  font-family: "Marvel", "Bangers", cursive;
+  font-size: 20px;
+  letter-spacing: 1.5px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.rank-row.achieved .rank-row-title {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.rank-row.current .rank-row-title {
+  color: var(--gold);
+  font-size: 22px;
+  text-shadow: 1px 1px 0 var(--spider-black);
+}
+
+.rank-row-min {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 12px;
+  font-weight: 600;
   color: var(--muted);
-  margin-top: 12px;
-  line-height: 1.45;
-  padding: 0 12px;
+  letter-spacing: 0;
+  flex-shrink: 0;
+}
+
+.rank-row.current .rank-row-min {
+  color: var(--gold);
+}
+
+.rank-row-blurb {
+  display: none;
+  font-family: "Inter", sans-serif;
+  font-style: italic;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+  margin-top: 6px;
+  line-height: 1.4;
+}
+
+.rank-row.current .rank-row-blurb {
+  display: block;
 }
 
 .breakdown {
@@ -482,7 +642,7 @@ main {
 }
 
 .breakdown-row .mark {
-  font-family: "Bangers", cursive;
+  font-family: "Marvel", "Bangers", cursive;
   font-size: 18px;
   letter-spacing: 1px;
 }
