@@ -480,8 +480,23 @@ function renderResults() {
   scoreWrap.appendChild(el("div", "score-total", `OUT OF ${total}`));
   screen.appendChild(scoreWrap);
 
-  screen.appendChild(el("div", "rank-title", rank.title));
-  screen.appendChild(el("div", "rank-blurb", rank.blurb));
+  const ranksList = el("div", "rank-list");
+  RANKS.forEach((r, i) => {
+    const next = RANKS[i + 1];
+    const range = next ? `${r.min}–${next.min - 1}` : String(r.min);
+
+    const row = el("div", "rank-row");
+    if (score >= r.min) row.classList.add("achieved");
+    if (r === rank) row.classList.add("current");
+
+    const main = el("div", "rank-row-main");
+    main.appendChild(el("span", "rank-row-title", r.title));
+    main.appendChild(el("span", "rank-row-min", range));
+    row.appendChild(main);
+    row.appendChild(el("div", "rank-row-blurb", r.blurb));
+    ranksList.appendChild(row);
+  });
+  screen.appendChild(ranksList);
 
   const list = el("div", "breakdown");
   breakdown.forEach((b) => {
@@ -588,6 +603,13 @@ document.addEventListener("keydown", (e) => {
   }
 
   if (e.key === "Enter") {
+    // If focus is on a specific control (back, choice, hint, etc.), let
+    // the browser activate that control instead of hijacking to the
+    // primary button.
+    const focusedTag = e.target.tagName;
+    if (focusedTag === "BUTTON" || focusedTag === "A" || focusedTag === "SELECT") {
+      return;
+    }
     const btn = document.querySelector(".btn-bottom:not(:disabled)");
     if (btn) {
       e.preventDefault();

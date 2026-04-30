@@ -347,7 +347,7 @@ main {
   background: transparent;
   border: 2px dashed var(--gold);
   color: var(--gold);
-  font-family: "Bangers", cursive;
+  font-family: "Marvel", "Bangers", cursive;
   font-size: 16px;
   letter-spacing: 2px;
   padding: 8px 18px;
@@ -539,24 +539,84 @@ main {
   }
 }
 
-.rank-title {
-  font-family: "Marvel", "Bangers", cursive;
-  font-size: clamp(32px, 9vw, 44px);
-  color: var(--gold);
-  letter-spacing: 2px;
-  text-align: center;
-  margin-top: 18px;
-  text-shadow: 2px 2px 0 var(--spider-black);
-  line-height: 1.05;
+.rank-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 24px 0 0;
 }
 
-.rank-blurb {
-  text-align: center;
-  font-size: 15px;
+.rank-row {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 14px;
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  opacity: 0.5;
+  transition: opacity 0.2s, background 0.2s, border-color 0.2s;
+}
+
+.rank-row.achieved {
+  opacity: 1;
+}
+
+.rank-row.current {
+  background: rgba(245, 197, 24, 0.12);
+  border-color: var(--gold);
+  box-shadow: 0 0 0 1px var(--gold), 0 6px 18px rgba(245, 197, 24, 0.18);
+  opacity: 1;
+}
+
+.rank-row-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.rank-row-title {
+  font-family: "Marvel", "Bangers", cursive;
+  font-size: 20px;
+  letter-spacing: 1.5px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.rank-row.achieved .rank-row-title {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.rank-row.current .rank-row-title {
+  color: var(--gold);
+  font-size: 22px;
+  text-shadow: 1px 1px 0 var(--spider-black);
+}
+
+.rank-row-min {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 12px;
+  font-weight: 600;
   color: var(--muted);
-  margin-top: 12px;
-  line-height: 1.45;
-  padding: 0 12px;
+  letter-spacing: 0;
+  flex-shrink: 0;
+}
+
+.rank-row.current .rank-row-min {
+  color: var(--gold);
+}
+
+.rank-row-blurb {
+  display: none;
+  font-family: "Inter", sans-serif;
+  font-style: italic;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+  margin-top: 6px;
+  line-height: 1.4;
+}
+
+.rank-row.current .rank-row-blurb {
+  display: block;
 }
 
 .breakdown {
