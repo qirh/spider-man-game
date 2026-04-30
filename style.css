@@ -506,7 +506,7 @@ main {
   border-radius: 12px;
   cursor: pointer;
   text-align: center;
-  height: 84px;
+  height: 92px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -526,16 +526,81 @@ main {
   line-height: 1;
 }
 
+.match-image-item {
+  justify-content: flex-end;
+  padding: 0;
+  overflow: hidden;
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(5, 8, 28, 0.02) 0%,
+      rgba(5, 8, 28, 0.26) 46%,
+      rgba(5, 8, 28, 0.94) 100%
+    ),
+    var(--match-image);
+  background-position: center, var(--match-image-position, center);
+  background-repeat: no-repeat;
+  background-size: cover, var(--match-image-size, cover);
+  border-color: rgba(255, 255, 255, 0.26);
+}
+
+.match-image-item::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 55% 18%, rgba(255, 255, 255, 0.18), transparent 34%),
+    linear-gradient(90deg, rgba(7, 10, 31, 0.36), transparent 45%);
+  pointer-events: none;
+}
+
+.match-image-label {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  padding: 22px 6px 8px;
+  background: linear-gradient(180deg, transparent, rgba(5, 8, 28, 0.92));
+  color: var(--spider-white);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.1;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.88);
+}
+
 .match-item.drawing-source,
 .match-item.drop-target {
   background: var(--spider-red);
   border-color: var(--spider-white);
 }
 
+.match-image-item.drawing-source,
+.match-image-item.drop-target {
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(194, 24, 7, 0.12) 0%,
+      rgba(194, 24, 7, 0.46) 48%,
+      rgba(82, 9, 8, 0.96) 100%
+    ),
+    var(--match-image);
+}
+
 .match-item.matched {
   background: rgba(245, 197, 24, 0.12);
   border-color: var(--gold);
   color: var(--gold);
+}
+
+.match-image-item.matched {
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(245, 197, 24, 0.04) 0%,
+      rgba(31, 28, 10, 0.22) 48%,
+      rgba(26, 22, 6, 0.94) 100%
+    ),
+    var(--match-image);
+  color: var(--spider-white);
 }
 
 .pair-num {

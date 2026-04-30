@@ -235,8 +235,7 @@ function renderMatch(screen, q) {
   q.left.forEach((item) => {
     const cell = el("button", "match-item");
     cell.dataset.leftId = item.id;
-    cell.appendChild(el("span", "emoji-icon", item.emoji));
-    cell.appendChild(el("span", null, item.label));
+    renderMatchItemContent(cell, item);
     if (pairs[item.id]) {
       cell.classList.add("matched");
       cell.appendChild(el("span", "pair-num", String(pairNums[item.id])));
@@ -268,6 +267,23 @@ function renderMatch(screen, q) {
   const next = nextButton();
   next.disabled = Object.keys(pairs).length !== q.left.length;
   screen.appendChild(next);
+}
+
+function renderMatchItemContent(cell, item) {
+  if (item.imageUrl) {
+    cell.classList.add("match-image-item");
+    cell.style.setProperty("--match-image", `url("${item.imageUrl}")`);
+    cell.style.setProperty(
+      "--match-image-position",
+      item.imagePosition || "center",
+    );
+    cell.style.setProperty("--match-image-size", item.imageSize || "cover");
+    cell.appendChild(el("span", "match-image-label", item.label));
+    return;
+  }
+
+  if (item.emoji) cell.appendChild(el("span", "emoji-icon", item.emoji));
+  cell.appendChild(el("span", null, item.label));
 }
 
 function onMatchLeftClick(e, id) {

@@ -162,3 +162,29 @@ test("Queens borough question requires Queens before proceeding", () => {
   assert.ok(q.choices.includes("Staten Island"));
   assert.strictEqual(q.wrongMessage, "Wrong answer");
 });
+
+test("quote attribution question points to Norman Osborn", () => {
+  const q = QUESTIONS.find((question) =>
+    question.prompt.includes("scientist myself"),
+  );
+  assert.ok(q, "expected a scientist quote question");
+  assert.strictEqual(q.choices[q.answer], "Norman Osborn");
+});
+
+test("odd-one-out villain question points to Lex Luthor", () => {
+  const q = QUESTIONS.find((question) =>
+    question.prompt.includes("NOT a Spider-Man villain"),
+  );
+  assert.ok(q, "expected an odd-one-out villain question");
+  assert.strictEqual(q.choices[q.answer], "Lex Luthor");
+});
+
+test("matching villain tiles include image backgrounds", () => {
+  const q = QUESTIONS.find((question) => question.type === "match");
+  assert.ok(q, "expected a matching question");
+  q.left.forEach((item) => {
+    assert.match(item.imageUrl, /^https:\/\/cdn\.marvel\.com\//);
+    assert.ok(item.imagePosition, `${item.label} should set image position`);
+    assert.ok(item.imageSize, `${item.label} should set image size`);
+  });
+});
