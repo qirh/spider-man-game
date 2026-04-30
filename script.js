@@ -111,7 +111,7 @@ const RANKS = [
   {
     min: 11,
     title: "TRUE BELIEVER",
-    blurb: "Excelsior! You know your Marvel.",
+    blurb: "Excelsior! You know your Spider-Man!",
   },
   {
     min: 14,
