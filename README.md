@@ -8,7 +8,7 @@ A mobile-first, single-page Spider-Man trivia game. Vanilla HTML/CSS/JS — no b
 
 Twelve questions across three formats:
 
-- **Multiple choice** — pick the right answer from four options (use the 1-4 keys on desktop; left/right arrows move between questions)
+- **Multiple choice** — pick the right answer from the options (use number keys on desktop; left/right arrows move between questions)
 - **Jeopardy-style fill-in-the-blank** — type the missing word (case-insensitive); some questions have a hint button
 - **Picture matching** — draw a line from each villain to their real name
 

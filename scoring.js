@@ -87,7 +87,7 @@ const QUESTIONS = [
   {
     type: "mc",
     prompt: "What is the best boro in NYC?",
-    choices: ["Manhattan", "Brooklyn", "Queens", "The Bronx"],
+    choices: ["Manhattan", "Brooklyn", "Queens", "The Bronx", "Staten Island"],
     answer: 2,
     requireCorrect: true,
     wrongMessage: "Wrong answer",

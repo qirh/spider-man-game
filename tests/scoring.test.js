@@ -164,5 +164,6 @@ test("Queens borough question requires Queens before proceeding", () => {
   assert.ok(q, "expected a best boro question");
   assert.strictEqual(q.requireCorrect, true);
   assert.strictEqual(q.choices[q.answer], "Queens");
+  assert.ok(q.choices.includes("Staten Island"));
   assert.strictEqual(q.wrongMessage, "Wrong answer");
 });
