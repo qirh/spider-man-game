@@ -115,6 +115,10 @@ main {
   margin-top: auto;
 }
 
+.fill-screen .btn-bottom {
+  margin-top: 0;
+}
+
 /* ---------- Back button (small, top-left) ---------- */
 .back-btn {
   align-self: flex-start;

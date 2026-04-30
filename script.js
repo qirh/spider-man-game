@@ -121,6 +121,8 @@ function renderMC(screen, q) {
 }
 
 function renderFill(screen, q) {
+  screen.classList.add("fill-screen");
+
   const card = el("div", "jeopardy");
   card.appendChild(el("div", "jeopardy-prompt", q.prompt));
   screen.appendChild(card);
@@ -164,6 +166,10 @@ function renderFill(screen, q) {
   const next = nextButton();
   next.disabled = !(state.answers[state.qIndex] || "").trim();
   screen.appendChild(next);
+
+  input.addEventListener("focus", () => {
+    setTimeout(() => next.scrollIntoView({ block: "nearest" }), 250);
+  });
 
   if (!focusedFills.has(state.qIndex)) {
     focusedFills.add(state.qIndex);
