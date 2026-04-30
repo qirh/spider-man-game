@@ -115,6 +115,10 @@ main {
   margin-top: auto;
 }
 
+.fill-screen .btn-bottom {
+  margin-top: 0;
+}
+
 /* ---------- Back button (small, top-left) ---------- */
 .back-btn {
   align-self: flex-start;
@@ -293,6 +297,16 @@ main {
   flex: 1;
 }
 
+.choice-error {
+  min-height: 20px;
+  margin: -10px 0 18px;
+  color: var(--spider-red);
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+
 /* ---------- Fill-in-the-blank (Jeopardy) ---------- */
 .jeopardy {
   background: var(--spider-blue);
@@ -382,14 +396,16 @@ main {
   color: var(--muted);
   text-align: center;
   margin-bottom: 14px;
+  line-height: 1.4;
 }
 
 .match-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 28px 32px;
+  gap: 28px 56px;
   margin-bottom: 18px;
   position: relative;
+  touch-action: none;
 }
 
 .match-lines {
@@ -415,6 +431,19 @@ main {
 .match-lines circle {
   fill: var(--gold);
   filter: drop-shadow(0 0 3px rgba(245, 197, 24, 0.5));
+}
+
+.match-lines .match-preview-line {
+  stroke: var(--spider-white);
+  stroke-width: 3;
+  stroke-dasharray: none;
+  stroke-dashoffset: 0;
+  animation: none;
+  opacity: 0.9;
+}
+
+.match-lines .match-preview-dot {
+  fill: var(--spider-white);
 }
 
 @keyframes draw-line {
@@ -451,6 +480,7 @@ main {
   gap: 4px;
   transition: background 0.15s, border-color 0.15s, transform 0.1s;
   -webkit-tap-highlight-color: transparent;
+  touch-action: none;
 }
 
 .match-item:active {
@@ -462,7 +492,8 @@ main {
   line-height: 1;
 }
 
-.match-item.selected {
+.match-item.drawing-source,
+.match-item.drop-target {
   background: var(--spider-red);
   border-color: var(--spider-white);
 }

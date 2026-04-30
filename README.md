@@ -6,13 +6,13 @@ A mobile-first, single-page Spider-Man trivia game. Vanilla HTML/CSS/JS — no b
 
 ## What's in the game
 
-Eleven questions across three formats:
+Twelve questions across three formats:
 
-- **Multiple choice** — pick the right answer from four options (use the 1-4 keys on desktop)
+- **Multiple choice** — pick the right answer from the options (use number keys on desktop; left/right arrows move between questions)
 - **Jeopardy-style fill-in-the-blank** — type the missing word (case-insensitive); some questions have a hint button
-- **Picture matching** — pair each villain with their real name (tap-to-pair, with connecting lines drawn between matches)
+- **Picture matching** — draw a line from each villain to their real name
 
-Max score is 14 — eight 1-point multiple-choice questions, two 1-point fill-ins, and one matching round worth 4 points. The results screen shows a per-question breakdown plus the full Spider-Man-themed rank ladder from "Civilian" to "Spider-Sense Master," with the rank you earned highlighted.
+Max score is 15 — nine 1-point multiple-choice questions, two 1-point fill-ins, and one matching round worth 4 points. The results screen shows a per-question breakdown plus the full Spider-Man-themed rank ladder from "Civilian" to "Spider-Sense Master," with the rank you earned highlighted.
 
 ## Run locally
 

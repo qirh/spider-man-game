@@ -6,12 +6,15 @@ const state = {
   screen: "welcome",
   qIndex: 0,
   answers: [],
-  matchSelectedLeft: null,
 };
 
 const focusedFills = new Set();
 const revealedHints = new Set();
 let prevScreenKey = null;
+let activeMatchDrag = null;
+let suppressNextMatchClick = false;
+
+const MATCH_DRAG_THRESHOLD = 6;
 
 const app = document.getElementById("app");
 
@@ -54,10 +57,10 @@ function renderWelcome() {
 }
 
 function startQuiz() {
+  cancelActiveMatchDrag();
   state.screen = "question";
   state.qIndex = 0;
   state.answers = [];
-  state.matchSelectedLeft = null;
   focusedFills.clear();
   revealedHints.clear();
   render();
@@ -96,6 +99,18 @@ function renderMC(screen, q) {
 
   const choices = el("div", "choices");
   const buttons = [];
+  const feedback = el("div", "choice-error");
+
+  function updateNextState() {
+    const selected = state.answers[state.qIndex];
+    const hasAnswer = selected !== undefined;
+    const isCorrect = isCorrectChoice(q, selected);
+    next.disabled = q.requireCorrect ? !isCorrect : !hasAnswer;
+    feedback.textContent = q.requireCorrect && hasAnswer && !isCorrect
+      ? q.wrongMessage || "Wrong answer"
+      : "";
+  }
+
   q.choices.forEach((c, i) => {
     const btn = el("button", "choice");
     btn.appendChild(el("span", "choice-num", String(i + 1)));
@@ -105,19 +120,31 @@ function renderMC(screen, q) {
       state.answers[state.qIndex] = i;
       buttons.forEach((b) => b.classList.remove("selected"));
       btn.classList.add("selected");
-      next.disabled = false;
+      updateNextState();
     });
     buttons.push(btn);
     choices.appendChild(btn);
   });
   screen.appendChild(choices);
 
+  if (q.requireCorrect) {
+    feedback.setAttribute("aria-live", "polite");
+    screen.appendChild(feedback);
+  }
+
   const next = nextButton();
-  next.disabled = state.answers[state.qIndex] === undefined;
+  updateNextState();
   screen.appendChild(next);
 }
 
+function isCorrectChoice(q, choiceIndex) {
+  const accepted = Array.isArray(q.answer) ? q.answer : [q.answer];
+  return accepted.includes(choiceIndex);
+}
+
 function renderFill(screen, q) {
+  screen.classList.add("fill-screen");
+
   const card = el("div", "jeopardy");
   card.appendChild(el("div", "jeopardy-prompt", q.prompt));
   screen.appendChild(card);
@@ -162,6 +189,10 @@ function renderFill(screen, q) {
   next.disabled = !(state.answers[state.qIndex] || "").trim();
   screen.appendChild(next);
 
+  input.addEventListener("focus", () => {
+    setTimeout(() => next.scrollIntoView({ block: "nearest" }), 250);
+  });
+
   if (!focusedFills.has(state.qIndex)) {
     focusedFills.add(state.qIndex);
     setTimeout(() => input.focus(), 60);
@@ -176,7 +207,7 @@ function getPairs() {
 function renderMatch(screen, q) {
   screen.appendChild(el("div", "q-text", q.prompt));
   screen.appendChild(
-    el("div", "match-help", "Tap a villain, then tap their real name."),
+    el("div", "match-help", "Draw a line from each villain to their real name."),
   );
 
   const pairs = getPairs();
@@ -206,12 +237,12 @@ function renderMatch(screen, q) {
     cell.dataset.leftId = item.id;
     cell.appendChild(el("span", "emoji-icon", item.emoji));
     cell.appendChild(el("span", null, item.label));
-    if (state.matchSelectedLeft === item.id) cell.classList.add("selected");
     if (pairs[item.id]) {
       cell.classList.add("matched");
       cell.appendChild(el("span", "pair-num", String(pairNums[item.id])));
     }
-    cell.addEventListener("click", () => onMatchLeftClick(item.id));
+    cell.addEventListener("pointerdown", (e) => startMatchDrag(e, item.id));
+    cell.addEventListener("click", (e) => onMatchLeftClick(e, item.id));
     leftCol.appendChild(cell);
   });
 
@@ -224,7 +255,7 @@ function renderMatch(screen, q) {
       cell.classList.add("matched");
       cell.appendChild(el("span", "pair-num", String(pairNums[item.id])));
     }
-    cell.addEventListener("click", () => onMatchRightClick(item.id));
+    cell.addEventListener("click", (e) => onMatchRightClick(e, item.id));
     rightCol.appendChild(cell);
   });
 
@@ -239,29 +270,21 @@ function renderMatch(screen, q) {
   screen.appendChild(next);
 }
 
-function onMatchLeftClick(id) {
+function onMatchLeftClick(e, id) {
+  if (consumeSuppressedMatchClick(e)) return;
   const pairs = getPairs();
   if (pairs[id]) {
     delete pairs[id];
-    state.matchSelectedLeft = null;
     render();
-    return;
   }
-  state.matchSelectedLeft = state.matchSelectedLeft === id ? null : id;
-  render();
 }
 
-function onMatchRightClick(id) {
+function onMatchRightClick(e, id) {
+  if (consumeSuppressedMatchClick(e)) return;
   const pairs = getPairs();
   const matchedLeft = Object.keys(pairs).find((k) => pairs[k] === id);
   if (matchedLeft) {
     delete pairs[matchedLeft];
-    render();
-    return;
-  }
-  if (state.matchSelectedLeft) {
-    pairs[state.matchSelectedLeft] = id;
-    state.matchSelectedLeft = null;
     render();
   }
 }
@@ -274,23 +297,59 @@ function nextButton() {
 }
 
 function nextQuestion() {
-  state.matchSelectedLeft = null;
+  cancelActiveMatchDrag();
   state.qIndex++;
   if (state.qIndex >= QUESTIONS.length) {
     state.screen = "results";
   }
   render();
-  window.scrollTo({ top: 0, behavior: "instant" });
+  scrollToTop();
 }
 
 function prevQuestion() {
-  state.matchSelectedLeft = null;
+  cancelActiveMatchDrag();
   if (state.qIndex === 0) {
     state.screen = "welcome";
   } else {
     state.qIndex--;
   }
   render();
+  scrollToTop();
+}
+
+function prevQuestionFromKeyboard() {
+  if (state.screen === "results") {
+    cancelActiveMatchDrag();
+    state.screen = "question";
+    state.qIndex = QUESTIONS.length - 1;
+    render();
+    scrollToTop();
+    return;
+  }
+
+  prevQuestion();
+}
+
+function nextQuestionFromKeyboard() {
+  const q = QUESTIONS[state.qIndex];
+  if (!canKeyboardAdvance(q)) {
+    showRequiredChoiceFeedback(q);
+    return;
+  }
+
+  nextQuestion();
+}
+
+function canKeyboardAdvance(q) {
+  return !q.requireCorrect || isCorrectChoice(q, state.answers[state.qIndex]);
+}
+
+function showRequiredChoiceFeedback(q) {
+  const feedback = document.querySelector(".choice-error");
+  if (feedback) feedback.textContent = q.wrongMessage || "Wrong answer";
+}
+
+function scrollToTop() {
   window.scrollTo({ top: 0, behavior: "instant" });
 }
 
@@ -369,6 +428,8 @@ function redrawMatchLines() {
   svg.innerHTML = "";
 
   Object.keys(pairs).forEach((leftId) => {
+    if (activeMatchDrag && activeMatchDrag.leftId === leftId) return;
+
     const rightId = pairs[leftId];
     const leftCell = grid.querySelector(`[data-left-id="${leftId}"]`);
     const rightCell = grid.querySelector(`[data-right-id="${rightId}"]`);
@@ -402,6 +463,215 @@ function redrawMatchLines() {
   });
 }
 
+function startMatchDrag(e, leftId) {
+  if (e.button !== undefined && e.button !== 0) return;
+
+  const grid = e.currentTarget.closest(".match-grid");
+  const svg = grid && grid.querySelector(".match-lines");
+  if (!grid || !svg) return;
+
+  cancelActiveMatchDrag();
+
+  activeMatchDrag = {
+    pointerId: e.pointerId,
+    leftId,
+    source: e.currentTarget,
+    grid,
+    svg,
+    startClientX: e.clientX,
+    startClientY: e.clientY,
+    moved: false,
+    dropTarget: null,
+    preview: null,
+  };
+
+  activeMatchDrag.source.classList.add("drawing-source");
+  activeMatchDrag.grid.classList.add("drawing");
+
+  if (activeMatchDrag.source.setPointerCapture) {
+    activeMatchDrag.source.setPointerCapture(e.pointerId);
+  }
+
+  window.addEventListener("pointermove", onMatchPointerMove);
+  window.addEventListener("pointerup", onMatchPointerUp);
+  window.addEventListener("pointercancel", onMatchPointerCancel);
+
+  redrawMatchLines();
+  createMatchPreview();
+  updateMatchPreview(e.clientX, e.clientY);
+  e.preventDefault();
+}
+
+function onMatchPointerMove(e) {
+  if (!activeMatchDrag || e.pointerId !== activeMatchDrag.pointerId) return;
+
+  const dx = e.clientX - activeMatchDrag.startClientX;
+  const dy = e.clientY - activeMatchDrag.startClientY;
+  if (Math.hypot(dx, dy) >= MATCH_DRAG_THRESHOLD) {
+    activeMatchDrag.moved = true;
+  }
+
+  updateMatchPreview(e.clientX, e.clientY);
+  e.preventDefault();
+}
+
+function onMatchPointerUp(e) {
+  if (!activeMatchDrag || e.pointerId !== activeMatchDrag.pointerId) return;
+
+  const { leftId } = activeMatchDrag;
+  const target = getRightTargetAt(e.clientX, e.clientY);
+  const wasDrag = activeMatchDrag.moved;
+  let shouldRender = false;
+
+  if (target) {
+    setMatchPair(leftId, target.dataset.rightId);
+    shouldRender = true;
+  } else if (!wasDrag) {
+    const pairs = getPairs();
+    if (pairs[leftId]) {
+      delete pairs[leftId];
+      shouldRender = true;
+    }
+  }
+
+  if (shouldRender || wasDrag) suppressSyntheticMatchClick();
+  finishMatchDrag({ renderAfter: shouldRender });
+  e.preventDefault();
+}
+
+function onMatchPointerCancel(e) {
+  if (!activeMatchDrag || e.pointerId !== activeMatchDrag.pointerId) return;
+  finishMatchDrag();
+}
+
+function setMatchPair(leftId, rightId) {
+  const pairs = getPairs();
+  Object.keys(pairs).forEach((key) => {
+    if (key !== leftId && pairs[key] === rightId) delete pairs[key];
+  });
+  pairs[leftId] = rightId;
+}
+
+function createMatchPreview() {
+  if (!activeMatchDrag) return;
+
+  const line = document.createElementNS(SVG_NS, "line");
+  line.setAttribute("class", "match-preview-line");
+
+  const startDot = document.createElementNS(SVG_NS, "circle");
+  startDot.setAttribute("class", "match-preview-dot");
+  startDot.setAttribute("r", "4");
+
+  const endDot = document.createElementNS(SVG_NS, "circle");
+  endDot.setAttribute("class", "match-preview-dot");
+  endDot.setAttribute("r", "4");
+
+  activeMatchDrag.svg.appendChild(line);
+  activeMatchDrag.svg.appendChild(startDot);
+  activeMatchDrag.svg.appendChild(endDot);
+  activeMatchDrag.preview = { line, startDot, endDot };
+}
+
+function updateMatchPreview(clientX, clientY) {
+  if (!activeMatchDrag || !activeMatchDrag.preview) return;
+
+  const { grid, source, preview } = activeMatchDrag;
+  const gridRect = grid.getBoundingClientRect();
+  const start = getLeftAnchor(source, gridRect);
+  const target = getRightTargetAt(clientX, clientY);
+  const end = target
+    ? getRightAnchor(target, gridRect)
+    : getPointInGrid(gridRect, clientX, clientY);
+
+  preview.line.setAttribute("x1", String(start.x));
+  preview.line.setAttribute("y1", String(start.y));
+  preview.line.setAttribute("x2", String(end.x));
+  preview.line.setAttribute("y2", String(end.y));
+  preview.startDot.setAttribute("cx", String(start.x));
+  preview.startDot.setAttribute("cy", String(start.y));
+  preview.endDot.setAttribute("cx", String(end.x));
+  preview.endDot.setAttribute("cy", String(end.y));
+
+  if (activeMatchDrag.dropTarget !== target) {
+    if (activeMatchDrag.dropTarget) {
+      activeMatchDrag.dropTarget.classList.remove("drop-target");
+    }
+    if (target) target.classList.add("drop-target");
+    activeMatchDrag.dropTarget = target;
+  }
+}
+
+function finishMatchDrag({ renderAfter = false } = {}) {
+  if (!activeMatchDrag) return;
+
+  const drag = activeMatchDrag;
+  if (drag.source.releasePointerCapture && drag.source.hasPointerCapture?.(drag.pointerId)) {
+    drag.source.releasePointerCapture(drag.pointerId);
+  }
+
+  window.removeEventListener("pointermove", onMatchPointerMove);
+  window.removeEventListener("pointerup", onMatchPointerUp);
+  window.removeEventListener("pointercancel", onMatchPointerCancel);
+
+  drag.source.classList.remove("drawing-source");
+  drag.grid.classList.remove("drawing");
+  if (drag.dropTarget) drag.dropTarget.classList.remove("drop-target");
+
+  activeMatchDrag = null;
+
+  if (renderAfter) render();
+  else redrawMatchLines();
+}
+
+function cancelActiveMatchDrag() {
+  if (activeMatchDrag) finishMatchDrag();
+}
+
+function getLeftAnchor(leftCell, gridRect) {
+  const rect = leftCell.getBoundingClientRect();
+  return {
+    x: rect.right - gridRect.left,
+    y: rect.top + rect.height / 2 - gridRect.top,
+  };
+}
+
+function getRightAnchor(rightCell, gridRect) {
+  const rect = rightCell.getBoundingClientRect();
+  return {
+    x: rect.left - gridRect.left,
+    y: rect.top + rect.height / 2 - gridRect.top,
+  };
+}
+
+function getPointInGrid(gridRect, clientX, clientY) {
+  return {
+    x: Math.max(0, Math.min(gridRect.width, clientX - gridRect.left)),
+    y: Math.max(0, Math.min(gridRect.height, clientY - gridRect.top)),
+  };
+}
+
+function getRightTargetAt(clientX, clientY) {
+  if (!activeMatchDrag) return null;
+
+  const hit = document.elementFromPoint(clientX, clientY);
+  const target = hit && hit.closest("[data-right-id]");
+  return target && activeMatchDrag.grid.contains(target) ? target : null;
+}
+
+function suppressSyntheticMatchClick() {
+  suppressNextMatchClick = true;
+  setTimeout(() => {
+    suppressNextMatchClick = false;
+  }, 0);
+}
+
+function consumeSuppressedMatchClick(e) {
+  if (!suppressNextMatchClick) return false;
+  e.preventDefault();
+  e.stopPropagation();
+  return true;
+}
+
 let resizePending = false;
 window.addEventListener("resize", () => {
   if (resizePending) return;
@@ -413,6 +683,8 @@ window.addEventListener("resize", () => {
 });
 
 document.addEventListener("keydown", (e) => {
+  if (handleArrowNavigation(e)) return;
+
   if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
 
   if (state.screen === "question") {
@@ -444,5 +716,35 @@ document.addEventListener("keydown", (e) => {
     }
   }
 });
+
+function handleArrowNavigation(e) {
+  if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return false;
+  if (e.altKey || e.ctrlKey || e.metaKey) return false;
+
+  if (state.screen === "welcome") {
+    if (e.key === "ArrowRight") {
+      e.preventDefault();
+      startQuiz();
+      return true;
+    }
+    return false;
+  }
+
+  if (state.screen === "results") {
+    if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      prevQuestionFromKeyboard();
+      return true;
+    }
+    return false;
+  }
+
+  if (state.screen !== "question") return false;
+
+  e.preventDefault();
+  if (e.key === "ArrowLeft") prevQuestionFromKeyboard();
+  else nextQuestionFromKeyboard();
+  return true;
+}
 
 render();
