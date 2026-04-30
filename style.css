@@ -84,7 +84,7 @@ main {
 
 /* ---------- Buttons ---------- */
 .btn {
-  font-family: "Bangers", cursive;
+  font-family: "Marvel", "Bangers", cursive;
   font-size: 28px;
   letter-spacing: 3px;
   background: var(--spider-red);
@@ -121,7 +121,7 @@ main {
   background: transparent;
   border: none;
   color: var(--muted);
-  font-family: "Bangers", cursive;
+  font-family: "Marvel", "Bangers", cursive;
   font-size: 18px;
   letter-spacing: 2px;
   padding: 6px 4px;
@@ -173,7 +173,7 @@ main {
 }
 
 .title {
-  font-family: "Bangers", cursive;
+  font-family: "Marvel", "Bangers", cursive;
   font-size: clamp(56px, 19vw, 96px);
   letter-spacing: 3px;
   color: var(--spider-red);
@@ -219,7 +219,7 @@ main {
 }
 
 .q-label {
-  font-family: "Bangers", cursive;
+  font-family: "Marvel", "Bangers", cursive;
   font-size: 16px;
   letter-spacing: 3px;
   color: var(--spider-red);
@@ -280,7 +280,7 @@ main {
 }
 
 .jeopardy-prompt {
-  font-family: "Bangers", cursive;
+  font-family: "Marvel", "Bangers", cursive;
   font-size: 26px;
   color: var(--gold);
   text-align: center;
@@ -321,14 +321,48 @@ main {
 .match-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: 28px 32px;
   margin-bottom: 18px;
+  position: relative;
+}
+
+.match-lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 1;
+}
+
+.match-lines line {
+  stroke: var(--gold);
+  stroke-width: 3;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 4px rgba(245, 197, 24, 0.4));
+  stroke-dasharray: 400;
+  stroke-dashoffset: 400;
+  animation: draw-line 0.4s ease-out forwards;
+}
+
+.match-lines circle {
+  fill: var(--gold);
+  filter: drop-shadow(0 0 3px rgba(245, 197, 24, 0.5));
+}
+
+@keyframes draw-line {
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 
 .match-col {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 28px;
+  position: relative;
+  z-index: 2;
 }
 
 .match-item {
@@ -382,7 +416,7 @@ main {
   border-radius: 50%;
   width: 24px;
   height: 24px;
-  font-family: "Bangers", cursive;
+  font-family: "Marvel", "Bangers", cursive;
   font-size: 14px;
   font-weight: 700;
   display: flex;
@@ -394,7 +428,7 @@ main {
 
 /* ---------- Results ---------- */
 .results-eyebrow {
-  font-family: "Bangers", cursive;
+  font-family: "Marvel", "Bangers", cursive;
   font-size: 18px;
   letter-spacing: 4px;
   color: var(--spider-red);
@@ -408,7 +442,7 @@ main {
 }
 
 .score-number {
-  font-family: "Bangers", cursive;
+  font-family: "Marvel", "Bangers", cursive;
   font-size: clamp(96px, 32vw, 144px);
   color: var(--spider-red);
   letter-spacing: 4px;
@@ -421,7 +455,7 @@ main {
 }
 
 .score-total {
-  font-family: "Bangers", cursive;
+  font-family: "Marvel", "Bangers", cursive;
   font-size: 30px;
   color: var(--muted);
   letter-spacing: 2px;
@@ -440,7 +474,7 @@ main {
 }
 
 .rank-title {
-  font-family: "Bangers", cursive;
+  font-family: "Marvel", "Bangers", cursive;
   font-size: clamp(32px, 9vw, 44px);
   color: var(--gold);
   letter-spacing: 2px;
@@ -482,7 +516,7 @@ main {
 }
 
 .breakdown-row .mark {
-  font-family: "Bangers", cursive;
+  font-family: "Marvel", "Bangers", cursive;
   font-size: 18px;
   letter-spacing: 1px;
 }

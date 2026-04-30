@@ -243,6 +243,13 @@ function renderMatch(screen, q) {
   const pairs = getPairs();
 
   const grid = el("div", "match-grid");
+  const linesSvg = document.createElementNS(
+    "http://www.w3.org/2000/svg",
+    "svg",
+  );
+  linesSvg.setAttribute("class", "match-lines");
+  grid.appendChild(linesSvg);
+
   const leftCol = el("div", "match-col");
   const rightCol = el("div", "match-col");
 
@@ -257,6 +264,7 @@ function renderMatch(screen, q) {
 
   q.left.forEach((item) => {
     const cell = el("button", "match-item");
+    cell.dataset.leftId = item.id;
     cell.appendChild(el("span", "emoji-icon", item.emoji));
     cell.appendChild(el("span", null, item.label));
     if (state.matchSelectedLeft === item.id) cell.classList.add("selected");
@@ -270,6 +278,7 @@ function renderMatch(screen, q) {
 
   q.right.forEach((item) => {
     const cell = el("button", "match-item");
+    cell.dataset.rightId = item.id;
     cell.appendChild(el("span", null, item.label));
     const matchedLeft = Object.keys(pairs).find((k) => pairs[k] === item.id);
     if (matchedLeft) {
@@ -283,6 +292,8 @@ function renderMatch(screen, q) {
   grid.appendChild(leftCol);
   grid.appendChild(rightCol);
   screen.appendChild(grid);
+
+  requestAnimationFrame(redrawMatchLines);
 
   const next = nextButton();
   next.disabled = Object.keys(pairs).length !== q.left.length;
@@ -439,5 +450,66 @@ function el(tag, cls, text) {
   if (text !== undefined && text !== null) e.textContent = text;
   return e;
 }
+
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+function redrawMatchLines() {
+  if (state.screen !== "question") return;
+  const q = QUESTIONS[state.qIndex];
+  if (q.type !== "match") return;
+  const grid = document.querySelector(".match-grid");
+  const svg = grid && grid.querySelector(".match-lines");
+  if (!grid || !svg) return;
+
+  const pairs = getPairs();
+  const gridRect = grid.getBoundingClientRect();
+  svg.setAttribute("viewBox", `0 0 ${gridRect.width} ${gridRect.height}`);
+  svg.setAttribute("width", String(gridRect.width));
+  svg.setAttribute("height", String(gridRect.height));
+  svg.innerHTML = "";
+
+  Object.keys(pairs).forEach((leftId) => {
+    const rightId = pairs[leftId];
+    const leftCell = grid.querySelector(`[data-left-id="${leftId}"]`);
+    const rightCell = grid.querySelector(`[data-right-id="${rightId}"]`);
+    if (!leftCell || !rightCell) return;
+
+    const lr = leftCell.getBoundingClientRect();
+    const rr = rightCell.getBoundingClientRect();
+
+    const x1 = lr.right - gridRect.left;
+    const y1 = lr.top + lr.height / 2 - gridRect.top;
+    const x2 = rr.left - gridRect.left;
+    const y2 = rr.top + rr.height / 2 - gridRect.top;
+
+    const line = document.createElementNS(SVG_NS, "line");
+    line.setAttribute("x1", String(x1));
+    line.setAttribute("y1", String(y1));
+    line.setAttribute("x2", String(x2));
+    line.setAttribute("y2", String(y2));
+    svg.appendChild(line);
+
+    for (const [cx, cy] of [
+      [x1, y1],
+      [x2, y2],
+    ]) {
+      const c = document.createElementNS(SVG_NS, "circle");
+      c.setAttribute("cx", String(cx));
+      c.setAttribute("cy", String(cy));
+      c.setAttribute("r", "4");
+      svg.appendChild(c);
+    }
+  });
+}
+
+let resizePending = false;
+window.addEventListener("resize", () => {
+  if (resizePending) return;
+  resizePending = true;
+  requestAnimationFrame(() => {
+    resizePending = false;
+    redrawMatchLines();
+  });
+});
 
 render();
