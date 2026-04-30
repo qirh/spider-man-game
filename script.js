@@ -1,14 +1,32 @@
 const QUESTIONS = [
   {
     type: "mc",
-    prompt: "Who created Spider-Man?",
+    prompt: "What is Spider-Man's real name?",
+    choices: ["Peter Parker", "Miles Morales", "Lewis Mumford", "Tony Stark"],
+    answer: [0, 1],
+  },
+  {
+    type: "mc",
+    prompt: "What bit Peter Parker to give him powers?",
     choices: [
-      "Stan Lee & Jack Kirby",
-      "Stan Lee & Steve Ditko",
-      "Bob Kane & Bill Finger",
-      "Jerry Siegel & Joe Shuster",
+      "A radioactive ant",
+      "A radioactive spider",
+      "A magic beetle",
+      "A robot bee",
     ],
     answer: 1,
+  },
+  {
+    type: "mc",
+    prompt: "What does Spider-Man shoot from his wrists?",
+    choices: ["Lasers", "Silly string", "Webs", "Confetti"],
+    answer: 2,
+  },
+  {
+    type: "mc",
+    prompt: "Who is Peter Parker's aunt?",
+    choices: ["Aunt May", "Aunt June", "Aunt April", "Aunt January"],
+    answer: 0,
   },
   {
     type: "fill",
@@ -51,6 +69,23 @@ const QUESTIONS = [
   },
   {
     type: "mc",
+    prompt: "Who created Spider-Man?",
+    choices: [
+      "Stan Lee & Jack Kirby",
+      "Stan Lee & Steve Ditko",
+      "Bob Kane & Bill Finger",
+      "Jerry Siegel & Joe Shuster",
+    ],
+    answer: 1,
+  },
+  {
+    type: "mc",
+    prompt: "In Into the Spider-Verse, what city does Miles Morales live in?",
+    choices: ["Los Angeles", "Brooklyn", "Queens", "Gotham"],
+    answer: 1,
+  },
+  {
+    type: "mc",
     prompt: 'Who is the lead Spider-Man in "Into the Spider-Verse" (2018)?',
     choices: ["Peter Parker", "Ben Reilly", "Miles Morales", "Gwen Stacy"],
     answer: 2,
@@ -64,22 +99,22 @@ const RANKS = [
     blurb: "Better stick to the bus and let the heroes handle it.",
   },
   {
-    min: 3,
+    min: 5,
     title: "FRIENDLY NEIGHBOR",
     blurb: "You know the basics. Spidey would wave.",
   },
   {
-    min: 5,
+    min: 8,
     title: "WEB SLINGER",
     blurb: "Solid spidey-knowledge. J. Jonah would hate to admit it.",
   },
   {
-    min: 7,
+    min: 11,
     title: "TRUE BELIEVER",
     blurb: "Excelsior! You know your Marvel.",
   },
   {
-    min: 9,
+    min: 14,
     title: "SPIDER-SENSE MASTER",
     blurb: "With great trivia comes great responsibility.",
   },
@@ -385,7 +420,8 @@ function calculateScore() {
   QUESTIONS.forEach((q, i) => {
     if (q.type === "mc") {
       total += 1;
-      const correct = state.answers[i] === q.answer;
+      const accepted = Array.isArray(q.answer) ? q.answer : [q.answer];
+      const correct = accepted.includes(state.answers[i]);
       if (correct) score += 1;
       breakdown.push({
         label: shorten(q.prompt),
