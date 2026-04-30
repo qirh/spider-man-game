@@ -65,6 +65,9 @@ main {
   display: flex;
   flex-direction: column;
   flex: 1;
+}
+
+.screen.animate-in {
   animation: fade-in 0.32s ease-out;
 }
 
@@ -110,6 +113,26 @@ main {
 
 .btn-bottom {
   margin-top: auto;
+}
+
+/* ---------- Back button (small, top-left) ---------- */
+.back-btn {
+  align-self: flex-start;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-family: "Bangers", cursive;
+  font-size: 18px;
+  letter-spacing: 2px;
+  padding: 6px 4px;
+  margin: -4px 0 10px -4px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s;
+}
+
+.back-btn:active {
+  color: var(--spider-white);
 }
 
 /* ---------- Welcome screen ---------- */

@@ -88,17 +88,33 @@ const state = {
   qIndex: 0,
   answers: [],
   matchSelectedLeft: null,
-  matchPairs: {},
-  fillInput: "",
 };
+
+const focusedFills = new Set();
+let prevScreenKey = null;
 
 const app = document.getElementById("app");
 
+function screenKey() {
+  if (state.screen === "welcome") return "welcome";
+  if (state.screen === "results") return "results";
+  return `q-${state.qIndex}`;
+}
+
 function render() {
+  const key = screenKey();
+  const isTransition = key !== prevScreenKey;
+  prevScreenKey = key;
+
   app.innerHTML = "";
-  if (state.screen === "welcome") return renderWelcome();
-  if (state.screen === "question") return renderQuestion();
-  if (state.screen === "results") return renderResults();
+  if (state.screen === "welcome") renderWelcome();
+  else if (state.screen === "question") renderQuestion();
+  else if (state.screen === "results") renderResults();
+
+  if (isTransition) {
+    const screenEl = app.querySelector(".screen");
+    if (screenEl) screenEl.classList.add("animate-in");
+  }
 }
 
 function renderWelcome() {
@@ -122,14 +138,17 @@ function startQuiz() {
   state.qIndex = 0;
   state.answers = [];
   state.matchSelectedLeft = null;
-  state.matchPairs = {};
-  state.fillInput = "";
+  focusedFills.clear();
   render();
 }
 
 function renderQuestion() {
   const q = QUESTIONS[state.qIndex];
   const screen = el("div", "screen");
+
+  const back = el("button", "back-btn", "← BACK");
+  back.addEventListener("click", prevQuestion);
+  screen.appendChild(back);
 
   const progress = el("div", "progress");
   for (let i = 0; i < QUESTIONS.length; i++) {
@@ -155,13 +174,17 @@ function renderMC(screen, q) {
   screen.appendChild(el("div", "q-text", q.prompt));
 
   const choices = el("div", "choices");
+  const buttons = [];
   q.choices.forEach((c, i) => {
     const btn = el("button", "choice", c);
     if (state.answers[state.qIndex] === i) btn.classList.add("selected");
     btn.addEventListener("click", () => {
       state.answers[state.qIndex] = i;
-      render();
+      buttons.forEach((b) => b.classList.remove("selected"));
+      btn.classList.add("selected");
+      next.disabled = false;
     });
+    buttons.push(btn);
     choices.appendChild(btn);
   });
   screen.appendChild(choices);
@@ -182,15 +205,13 @@ function renderFill(screen, q) {
   input.autocomplete = "off";
   input.autocapitalize = "off";
   input.spellcheck = false;
-  input.value = state.fillInput;
+  input.value = state.answers[state.qIndex] || "";
   input.addEventListener("input", (e) => {
-    state.fillInput = e.target.value;
     state.answers[state.qIndex] = e.target.value;
-    const nextBtn = document.getElementById("q-next");
-    if (nextBtn) nextBtn.disabled = !state.fillInput.trim();
+    next.disabled = !e.target.value.trim();
   });
   input.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && state.fillInput.trim()) {
+    if (e.key === "Enter" && (state.answers[state.qIndex] || "").trim()) {
       e.preventDefault();
       input.blur();
       nextQuestion();
@@ -199,11 +220,18 @@ function renderFill(screen, q) {
   screen.appendChild(input);
 
   const next = nextButton();
-  next.id = "q-next";
-  next.disabled = !state.fillInput.trim();
+  next.disabled = !(state.answers[state.qIndex] || "").trim();
   screen.appendChild(next);
 
-  setTimeout(() => input.focus(), 60);
+  if (!focusedFills.has(state.qIndex)) {
+    focusedFills.add(state.qIndex);
+    setTimeout(() => input.focus(), 60);
+  }
+}
+
+function getPairs() {
+  if (!state.answers[state.qIndex]) state.answers[state.qIndex] = {};
+  return state.answers[state.qIndex];
 }
 
 function renderMatch(screen, q) {
@@ -212,30 +240,29 @@ function renderMatch(screen, q) {
     el("div", "match-help", "Tap a villain, then tap their real name."),
   );
 
+  const pairs = getPairs();
+
   const grid = el("div", "match-grid");
   const leftCol = el("div", "match-col");
   const rightCol = el("div", "match-col");
 
-  // Pair numbers reflect order of pairing (insertion order of matchPairs).
+  // Pair numbers reflect order of pairing (insertion order of the pairs object).
   const pairNums = {};
   let n = 1;
-  for (const leftId of Object.keys(state.matchPairs)) {
+  for (const leftId of Object.keys(pairs)) {
     pairNums[leftId] = n;
-    pairNums[state.matchPairs[leftId]] = n;
+    pairNums[pairs[leftId]] = n;
     n++;
   }
 
   q.left.forEach((item) => {
     const cell = el("button", "match-item");
-    const emoji = el("span", "emoji-icon", item.emoji);
-    const label = el("span", null, item.label);
-    cell.appendChild(emoji);
-    cell.appendChild(label);
+    cell.appendChild(el("span", "emoji-icon", item.emoji));
+    cell.appendChild(el("span", null, item.label));
     if (state.matchSelectedLeft === item.id) cell.classList.add("selected");
-    if (state.matchPairs[item.id]) {
+    if (pairs[item.id]) {
       cell.classList.add("matched");
-      const badge = el("span", "pair-num", String(pairNums[item.id]));
-      cell.appendChild(badge);
+      cell.appendChild(el("span", "pair-num", String(pairNums[item.id])));
     }
     cell.addEventListener("click", () => onMatchLeftClick(item.id));
     leftCol.appendChild(cell);
@@ -244,13 +271,10 @@ function renderMatch(screen, q) {
   q.right.forEach((item) => {
     const cell = el("button", "match-item");
     cell.appendChild(el("span", null, item.label));
-    const matchedLeft = Object.keys(state.matchPairs).find(
-      (k) => state.matchPairs[k] === item.id,
-    );
+    const matchedLeft = Object.keys(pairs).find((k) => pairs[k] === item.id);
     if (matchedLeft) {
       cell.classList.add("matched");
-      const badge = el("span", "pair-num", String(pairNums[item.id]));
-      cell.appendChild(badge);
+      cell.appendChild(el("span", "pair-num", String(pairNums[item.id])));
     }
     cell.addEventListener("click", () => onMatchRightClick(item.id));
     rightCol.appendChild(cell);
@@ -261,13 +285,14 @@ function renderMatch(screen, q) {
   screen.appendChild(grid);
 
   const next = nextButton();
-  next.disabled = Object.keys(state.matchPairs).length !== q.left.length;
+  next.disabled = Object.keys(pairs).length !== q.left.length;
   screen.appendChild(next);
 }
 
 function onMatchLeftClick(id) {
-  if (state.matchPairs[id]) {
-    delete state.matchPairs[id];
+  const pairs = getPairs();
+  if (pairs[id]) {
+    delete pairs[id];
     state.matchSelectedLeft = null;
     render();
     return;
@@ -277,16 +302,15 @@ function onMatchLeftClick(id) {
 }
 
 function onMatchRightClick(id) {
-  const matchedLeft = Object.keys(state.matchPairs).find(
-    (k) => state.matchPairs[k] === id,
-  );
+  const pairs = getPairs();
+  const matchedLeft = Object.keys(pairs).find((k) => pairs[k] === id);
   if (matchedLeft) {
-    delete state.matchPairs[matchedLeft];
+    delete pairs[matchedLeft];
     render();
     return;
   }
   if (state.matchSelectedLeft) {
-    state.matchPairs[state.matchSelectedLeft] = id;
+    pairs[state.matchSelectedLeft] = id;
     state.matchSelectedLeft = null;
     render();
   }
@@ -300,21 +324,21 @@ function nextButton() {
 }
 
 function nextQuestion() {
-  const q = QUESTIONS[state.qIndex];
-  if (q.type === "fill") {
-    state.answers[state.qIndex] = state.fillInput;
-  }
-  if (q.type === "match" && !state.answers[state.qIndex]) {
-    state.answers[state.qIndex] = { ...state.matchPairs };
-  }
-
-  state.qIndex++;
   state.matchSelectedLeft = null;
-  state.matchPairs = {};
-  state.fillInput = "";
-
+  state.qIndex++;
   if (state.qIndex >= QUESTIONS.length) {
     state.screen = "results";
+  }
+  render();
+  window.scrollTo({ top: 0, behavior: "instant" });
+}
+
+function prevQuestion() {
+  state.matchSelectedLeft = null;
+  if (state.qIndex === 0) {
+    state.screen = "welcome";
+  } else {
+    state.qIndex--;
   }
   render();
   window.scrollTo({ top: 0, behavior: "instant" });
@@ -332,7 +356,7 @@ function calculateScore() {
       if (correct) score += 1;
       breakdown.push({
         label: shorten(q.prompt),
-        got: 1 * (correct ? 1 : 0),
+        got: correct ? 1 : 0,
         possible: 1,
       });
     } else if (q.type === "fill") {
