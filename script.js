@@ -15,6 +15,7 @@ const QUESTIONS = [
     prompt: "WITH GREAT POWER COMES GREAT _______",
     placeholder: "your answer",
     answer: "responsibility",
+    hint: "responsabilidad in spanish",
     label: "FILL IN THE BLANK",
   },
   {
@@ -45,6 +46,7 @@ const QUESTIONS = [
     prompt: "PETER PARKER'S BELOVED UNCLE WAS NAMED UNCLE _______",
     placeholder: "his first name",
     answer: "ben",
+    hint: "Βενιαμίν in greek",
     label: "FILL IN THE BLANK",
   },
   {
@@ -91,6 +93,7 @@ const state = {
 };
 
 const focusedFills = new Set();
+const revealedHints = new Set();
 let prevScreenKey = null;
 
 const app = document.getElementById("app");
@@ -139,6 +142,7 @@ function startQuiz() {
   state.answers = [];
   state.matchSelectedLeft = null;
   focusedFills.clear();
+  revealedHints.clear();
   render();
 }
 
@@ -176,7 +180,9 @@ function renderMC(screen, q) {
   const choices = el("div", "choices");
   const buttons = [];
   q.choices.forEach((c, i) => {
-    const btn = el("button", "choice", c);
+    const btn = el("button", "choice");
+    btn.appendChild(el("span", "choice-num", String(i + 1)));
+    btn.appendChild(el("span", "choice-text", c));
     if (state.answers[state.qIndex] === i) btn.classList.add("selected");
     btn.addEventListener("click", () => {
       state.answers[state.qIndex] = i;
@@ -218,6 +224,22 @@ function renderFill(screen, q) {
     }
   });
   screen.appendChild(input);
+
+  if (q.hint) {
+    const wrap = el("div", "hint-wrap");
+    if (revealedHints.has(state.qIndex)) {
+      wrap.appendChild(el("div", "hint-text", `💡 ${q.hint}`));
+    } else {
+      const hintBtn = el("button", "hint-btn", "💡 NEED A HINT?");
+      hintBtn.addEventListener("click", () => {
+        revealedHints.add(state.qIndex);
+        wrap.innerHTML = "";
+        wrap.appendChild(el("div", "hint-text", `💡 ${q.hint}`));
+      });
+      wrap.appendChild(hintBtn);
+    }
+    screen.appendChild(wrap);
+  }
 
   const next = nextButton();
   next.disabled = !(state.answers[state.qIndex] || "").trim();
@@ -510,6 +532,32 @@ window.addEventListener("resize", () => {
     resizePending = false;
     redrawMatchLines();
   });
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+
+  if (state.screen === "question") {
+    const q = QUESTIONS[state.qIndex];
+    if (q.type === "mc") {
+      const num = parseInt(e.key, 10);
+      if (num >= 1 && num <= q.choices.length) {
+        e.preventDefault();
+        const choiceEls = document.querySelectorAll(".choices .choice");
+        const target = choiceEls[num - 1];
+        if (target) target.click();
+        return;
+      }
+    }
+  }
+
+  if (e.key === "Enter") {
+    const btn = document.querySelector(".btn-bottom:not(:disabled)");
+    if (btn) {
+      e.preventDefault();
+      btn.click();
+    }
+  }
 });
 
 render();

@@ -248,12 +248,15 @@ main {
   font-family: "Inter", sans-serif;
   font-size: 16px;
   font-weight: 500;
-  padding: 16px 18px;
+  padding: 14px 16px;
   border-radius: 12px;
   text-align: left;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s, transform 0.1s;
   -webkit-tap-highlight-color: transparent;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .choice:active {
@@ -264,6 +267,30 @@ main {
   background: var(--spider-red);
   border-color: var(--spider-white);
   font-weight: 600;
+}
+
+.choice-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 6px;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
+  flex-shrink: 0;
+}
+
+.choice.selected .choice-num {
+  border-color: var(--spider-white);
+  color: var(--spider-white);
+}
+
+.choice-text {
+  flex: 1;
 }
 
 /* ---------- Fill-in-the-blank (Jeopardy) ---------- */
@@ -308,6 +335,45 @@ main {
   outline: none;
   border-color: var(--spider-red);
   box-shadow: 0 0 0 3px rgba(230, 36, 41, 0.25);
+}
+
+.hint-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 22px;
+}
+
+.hint-btn {
+  background: transparent;
+  border: 2px dashed var(--gold);
+  color: var(--gold);
+  font-family: "Bangers", cursive;
+  font-size: 16px;
+  letter-spacing: 2px;
+  padding: 8px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s, color 0.15s;
+}
+
+.hint-btn:active {
+  background: var(--gold);
+  color: var(--spider-black);
+}
+
+.hint-text {
+  color: var(--gold);
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  font-style: italic;
+  text-align: center;
+  padding: 10px 16px;
+  border: 2px solid var(--gold);
+  border-radius: 8px;
+  background: rgba(245, 197, 24, 0.08);
+  animation: fade-in 0.25s ease-out;
 }
 
 /* ---------- Picture matching ---------- */
