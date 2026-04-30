@@ -11,6 +11,24 @@ const state = {
 const focusedFills = new Set();
 const revealedHints = new Set();
 let prevScreenKey = null;
+let introPlayed = false;
+
+// Hydrate from localStorage if a recent in-progress session exists.
+(function hydrate() {
+  const saved = Persistence.load();
+  if (!saved) return;
+  if (saved.screen === "question" && Array.isArray(saved.answers)) {
+    state.screen = saved.screen;
+    state.qIndex = Math.max(0, Math.min(saved.qIndex || 0, QUESTIONS.length - 1));
+    state.answers = saved.answers;
+    (saved.revealedHints || []).forEach((i) => revealedHints.add(i));
+    introPlayed = true;
+  }
+})();
+
+function persist() {
+  Persistence.save(state, revealedHints);
+}
 let activeMatchDrag = null;
 let suppressNextMatchClick = false;
 
@@ -42,6 +60,7 @@ function render() {
 
 function renderWelcome() {
   const screen = el("div", "screen welcome");
+  if (!introPlayed) screen.classList.add("intro");
   screen.innerHTML = `
     <div class="hanging">
       <div class="thread"></div>
@@ -54,15 +73,57 @@ function renderWelcome() {
   btn.addEventListener("click", startQuiz);
   screen.appendChild(btn);
   app.appendChild(screen);
+
+  if (!introPlayed) {
+    introPlayed = true;
+    playIntro();
+  }
+}
+
+function playIntro() {
+  const overlay = document.createElement("div");
+  overlay.className = "web-crack";
+  overlay.setAttribute("aria-hidden", "true");
+  const radii = [18, 36, 56, 78];
+  const spokes = Array.from({ length: 16 }).map((_, i) => {
+    const a = (i * Math.PI * 2) / 16;
+    const len = 90 + (i % 3) * 4;
+    return `<line x1="0" y1="0" x2="${(Math.cos(a) * len).toFixed(2)}" y2="${(Math.sin(a) * len).toFixed(2)}"/>`;
+  }).join("");
+  const rings = radii.map((r) => {
+    const pts = Array.from({ length: 16 }).map((_, i) => {
+      const a = (i * Math.PI * 2) / 16;
+      const j = i % 2 === 0 ? 0.94 : 1.04;
+      return `${(Math.cos(a) * r * j).toFixed(2)},${(Math.sin(a) * r * j).toFixed(2)}`;
+    });
+    return `<polygon points="${pts.join(" ")}" stroke-opacity="0.7"/>`;
+  }).join("");
+  overlay.innerHTML = `
+    <div class="crack-flash"></div>
+    <svg viewBox="-100 -100 200 200" xmlns="http://www.w3.org/2000/svg">
+      <g fill="none" stroke="white" stroke-width="0.6" stroke-linecap="round" opacity="0.85">
+        ${spokes}
+        ${rings}
+      </g>
+      <circle cx="0" cy="0" r="4" fill="white"/>
+    </svg>
+  `;
+  document.body.appendChild(overlay);
+  AudioFx.crack();
+  setTimeout(() => AudioFx.thwip(), 280);
+  setTimeout(() => overlay.remove(), 1200);
 }
 
 function startQuiz() {
   cancelActiveMatchDrag();
+  AudioFx.advance();
   state.screen = "question";
   state.qIndex = 0;
   state.answers = [];
   focusedFills.clear();
   revealedHints.clear();
+  Persistence.clear();
+  persist();
   render();
 }
 
@@ -121,6 +182,9 @@ function renderMC(screen, q) {
       buttons.forEach((b) => b.classList.remove("selected"));
       btn.classList.add("selected");
       updateNextState();
+      if (q.requireCorrect && !isCorrectChoice(q, i)) AudioFx.wrong();
+      else AudioFx.click();
+      persist();
     });
     buttons.push(btn);
     choices.appendChild(btn);
@@ -159,6 +223,7 @@ function renderFill(screen, q) {
   input.addEventListener("input", (e) => {
     state.answers[state.qIndex] = e.target.value;
     next.disabled = !e.target.value.trim();
+    persist();
   });
   input.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && (state.answers[state.qIndex] || "").trim()) {
@@ -179,6 +244,8 @@ function renderFill(screen, q) {
         revealedHints.add(state.qIndex);
         wrap.innerHTML = "";
         wrap.appendChild(el("div", "hint-text", `💡 ${q.hint}`));
+        AudioFx.hint();
+        persist();
       });
       wrap.appendChild(hintBtn);
     }
@@ -317,6 +384,11 @@ function nextQuestion() {
   state.qIndex++;
   if (state.qIndex >= QUESTIONS.length) {
     state.screen = "results";
+    Persistence.clear();
+    AudioFx.fanfare();
+  } else {
+    AudioFx.advance();
+    persist();
   }
   render();
   scrollToTop();
@@ -326,9 +398,12 @@ function prevQuestion() {
   cancelActiveMatchDrag();
   if (state.qIndex === 0) {
     state.screen = "welcome";
+    Persistence.clear();
   } else {
     state.qIndex--;
+    persist();
   }
+  AudioFx.click();
   render();
   scrollToTop();
 }
@@ -544,6 +619,8 @@ function setMatchPair(leftId, rightId) {
     if (key !== leftId && pairs[key] === rightId) delete pairs[key];
   });
   pairs[leftId] = rightId;
+  AudioFx.match();
+  persist();
 }
 
 function createMatchPreview() {
@@ -868,5 +945,22 @@ function handleArrowNavigation(e) {
   else nextQuestionFromKeyboard();
   return true;
 }
+
+// Mute toggle wiring
+(function setupMute() {
+  const btn = document.getElementById("mute-toggle");
+  if (!btn) return;
+  function sync() {
+    const m = AudioFx.isMuted();
+    btn.textContent = m ? "🔇" : "🔊";
+    btn.classList.toggle("muted", m);
+  }
+  btn.addEventListener("click", () => {
+    AudioFx.setMuted(!AudioFx.isMuted());
+    sync();
+    if (!AudioFx.isMuted()) AudioFx.click();
+  });
+  sync();
+})();
 
 render();

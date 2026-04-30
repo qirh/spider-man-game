@@ -160,7 +160,7 @@ test("Queens borough question requires Queens before proceeding", () => {
   assert.strictEqual(q.requireCorrect, true);
   assert.strictEqual(q.choices[q.answer], "Queens");
   assert.ok(q.choices.includes("Staten Island"));
-  assert.strictEqual(q.wrongMessage, "Wrong answer");
+  assert.strictEqual(q.wrongMessage, "eww,");
 });
 
 test("quote attribution question points to Norman Osborn", () => {

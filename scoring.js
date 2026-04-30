@@ -114,7 +114,7 @@ const QUESTIONS = [
     choices: ["Queens", "Manhattan", "Brooklyn", "The Bronx", "Staten Island"],
     answer: 0,
     requireCorrect: true,
-    wrongMessage: "Wrong answer",
+    wrongMessage: "eww,",
   },
   {
     type: "mc",
