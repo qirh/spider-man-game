@@ -435,31 +435,9 @@ function redrawMatchLines() {
     const rightCell = grid.querySelector(`[data-right-id="${rightId}"]`);
     if (!leftCell || !rightCell) return;
 
-    const lr = leftCell.getBoundingClientRect();
-    const rr = rightCell.getBoundingClientRect();
-
-    const x1 = lr.right - gridRect.left;
-    const y1 = lr.top + lr.height / 2 - gridRect.top;
-    const x2 = rr.left - gridRect.left;
-    const y2 = rr.top + rr.height / 2 - gridRect.top;
-
-    const line = document.createElementNS(SVG_NS, "line");
-    line.setAttribute("x1", String(x1));
-    line.setAttribute("y1", String(y1));
-    line.setAttribute("x2", String(x2));
-    line.setAttribute("y2", String(y2));
-    svg.appendChild(line);
-
-    for (const [cx, cy] of [
-      [x1, y1],
-      [x2, y2],
-    ]) {
-      const c = document.createElementNS(SVG_NS, "circle");
-      c.setAttribute("cx", String(cx));
-      c.setAttribute("cy", String(cy));
-      c.setAttribute("r", "4");
-      svg.appendChild(c);
-    }
+    const start = getLeftAnchor(leftCell, gridRect);
+    const end = getRightAnchor(rightCell, gridRect);
+    appendWebConnection(svg, start, end);
   });
 }
 
@@ -555,7 +533,7 @@ function setMatchPair(leftId, rightId) {
 function createMatchPreview() {
   if (!activeMatchDrag) return;
 
-  const line = document.createElementNS(SVG_NS, "line");
+  const line = document.createElementNS(SVG_NS, "path");
   line.setAttribute("class", "match-preview-line");
 
   const startDot = document.createElementNS(SVG_NS, "circle");
@@ -583,10 +561,7 @@ function updateMatchPreview(clientX, clientY) {
     ? getRightAnchor(target, gridRect)
     : getPointInGrid(gridRect, clientX, clientY);
 
-  preview.line.setAttribute("x1", String(start.x));
-  preview.line.setAttribute("y1", String(start.y));
-  preview.line.setAttribute("x2", String(end.x));
-  preview.line.setAttribute("y2", String(end.y));
+  preview.line.setAttribute("d", getWebGeometry(start, end).d);
   preview.startDot.setAttribute("cx", String(start.x));
   preview.startDot.setAttribute("cy", String(start.y));
   preview.endDot.setAttribute("cx", String(end.x));
@@ -648,6 +623,137 @@ function getPointInGrid(gridRect, clientX, clientY) {
     x: Math.max(0, Math.min(gridRect.width, clientX - gridRect.left)),
     y: Math.max(0, Math.min(gridRect.height, clientY - gridRect.top)),
   };
+}
+
+function appendWebConnection(svg, start, end) {
+  const group = document.createElementNS(SVG_NS, "g");
+  group.setAttribute("class", "web-connection");
+
+  [-4, 4].forEach((offset) => {
+    const strand = document.createElementNS(SVG_NS, "path");
+    strand.setAttribute("class", "web-strand web-strand-side");
+    strand.setAttribute("d", getWebGeometry(start, end, offset).d);
+    group.appendChild(strand);
+  });
+
+  const geometry = getWebGeometry(start, end);
+  const main = document.createElementNS(SVG_NS, "path");
+  main.setAttribute("class", "web-strand web-strand-main");
+  main.setAttribute("d", geometry.d);
+  group.appendChild(main);
+
+  [0.25, 0.5, 0.75].forEach((t, index) => {
+    const thread = document.createElementNS(SVG_NS, "path");
+    thread.setAttribute("class", "web-cross-thread");
+    thread.setAttribute("d", getWebThreadPath(geometry, t, index));
+    group.appendChild(thread);
+  });
+
+  [start, end].forEach((point) => {
+    const knot = document.createElementNS(SVG_NS, "circle");
+    knot.setAttribute("class", "web-knot");
+    knot.setAttribute("cx", formatSvgNumber(point.x));
+    knot.setAttribute("cy", formatSvgNumber(point.y));
+    knot.setAttribute("r", "4");
+    group.appendChild(knot);
+  });
+
+  svg.appendChild(group);
+}
+
+function getWebGeometry(start, end, offset = 0) {
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  const distance = Math.hypot(dx, dy) || 1;
+  const nx = -dy / distance;
+  const ny = dx / distance;
+  const bend = Math.max(10, Math.min(26, distance * 0.14));
+
+  const p0 = offsetPoint(start, nx, ny, offset);
+  const p3 = offsetPoint(end, nx, ny, offset);
+  const p1 = {
+    x: start.x + dx * 0.34 + nx * (bend + offset),
+    y: start.y + dy * 0.34 + ny * (bend + offset),
+  };
+  const p2 = {
+    x: start.x + dx * 0.66 + nx * (bend + offset),
+    y: start.y + dy * 0.66 + ny * (bend + offset),
+  };
+
+  return {
+    p0,
+    p1,
+    p2,
+    p3,
+    d: `M ${formatSvgPoint(p0)} C ${formatSvgPoint(p1)} ${formatSvgPoint(p2)} ${formatSvgPoint(p3)}`,
+  };
+}
+
+function getWebThreadPath(geometry, t, index) {
+  const point = getCubicPoint(geometry, t);
+  const tangent = getCubicTangent(geometry, t);
+  const length = Math.hypot(tangent.x, tangent.y) || 1;
+  const ux = tangent.x / length;
+  const uy = tangent.y / length;
+  const nx = -uy;
+  const ny = ux;
+  const halfWidth = index === 1 ? 10 : 8;
+  const skew = index === 1 ? 4 : -3;
+  const from = {
+    x: point.x - nx * halfWidth - ux * skew,
+    y: point.y - ny * halfWidth - uy * skew,
+  };
+  const to = {
+    x: point.x + nx * halfWidth + ux * skew,
+    y: point.y + ny * halfWidth + uy * skew,
+  };
+
+  return `M ${formatSvgPoint(from)} L ${formatSvgPoint(to)}`;
+}
+
+function getCubicPoint({ p0, p1, p2, p3 }, t) {
+  const mt = 1 - t;
+  return {
+    x:
+      mt ** 3 * p0.x +
+      3 * mt ** 2 * t * p1.x +
+      3 * mt * t ** 2 * p2.x +
+      t ** 3 * p3.x,
+    y:
+      mt ** 3 * p0.y +
+      3 * mt ** 2 * t * p1.y +
+      3 * mt * t ** 2 * p2.y +
+      t ** 3 * p3.y,
+  };
+}
+
+function getCubicTangent({ p0, p1, p2, p3 }, t) {
+  const mt = 1 - t;
+  return {
+    x:
+      3 * mt ** 2 * (p1.x - p0.x) +
+      6 * mt * t * (p2.x - p1.x) +
+      3 * t ** 2 * (p3.x - p2.x),
+    y:
+      3 * mt ** 2 * (p1.y - p0.y) +
+      6 * mt * t * (p2.y - p1.y) +
+      3 * t ** 2 * (p3.y - p2.y),
+  };
+}
+
+function offsetPoint(point, nx, ny, offset) {
+  return {
+    x: point.x + nx * offset,
+    y: point.y + ny * offset,
+  };
+}
+
+function formatSvgPoint(point) {
+  return `${formatSvgNumber(point.x)} ${formatSvgNumber(point.y)}`;
+}
+
+function formatSvgNumber(value) {
+  return Number(value.toFixed(2));
 }
 
 function getRightTargetAt(clientX, clientY) {

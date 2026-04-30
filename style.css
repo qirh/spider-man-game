@@ -418,35 +418,69 @@ main {
   z-index: 1;
 }
 
-.match-lines line {
-  stroke: var(--gold);
-  stroke-width: 3;
+.match-lines .web-strand,
+.match-lines .web-cross-thread {
+  fill: none;
   stroke-linecap: round;
-  filter: drop-shadow(0 0 4px rgba(245, 197, 24, 0.4));
-  stroke-dasharray: 400;
-  stroke-dashoffset: 400;
-  animation: draw-line 0.4s ease-out forwards;
+  stroke-linejoin: round;
 }
 
-.match-lines circle {
-  fill: var(--gold);
-  filter: drop-shadow(0 0 3px rgba(245, 197, 24, 0.5));
+.match-lines .web-strand {
+  stroke: rgba(255, 255, 255, 0.92);
+  filter:
+    drop-shadow(0 0 3px rgba(255, 255, 255, 0.62))
+    drop-shadow(0 0 8px rgba(245, 197, 24, 0.28));
+  stroke-dasharray: 400;
+  stroke-dashoffset: 400;
+  animation: draw-web 0.42s ease-out forwards;
+}
+
+.match-lines .web-strand-main {
+  stroke-width: 2.7;
+}
+
+.match-lines .web-strand-side {
+  opacity: 0.58;
+  stroke-width: 1.2;
+}
+
+.match-lines .web-cross-thread {
+  stroke: rgba(255, 255, 255, 0.72);
+  stroke-width: 1.1;
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.35));
+  stroke-dasharray: 34;
+  stroke-dashoffset: 34;
+  animation: draw-web 0.28s ease-out forwards;
+}
+
+.match-lines .web-knot {
+  fill: var(--spider-white);
+  stroke: rgba(245, 197, 24, 0.72);
+  stroke-width: 1.5;
+  filter:
+    drop-shadow(0 0 4px rgba(255, 255, 255, 0.7))
+    drop-shadow(0 0 9px rgba(245, 197, 24, 0.36));
 }
 
 .match-lines .match-preview-line {
+  fill: none;
   stroke: var(--spider-white);
-  stroke-width: 3;
+  stroke-width: 2.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
   stroke-dasharray: none;
   stroke-dashoffset: 0;
   animation: none;
-  opacity: 0.9;
+  opacity: 0.88;
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.45));
 }
 
 .match-lines .match-preview-dot {
   fill: var(--spider-white);
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.58));
 }
 
-@keyframes draw-line {
+@keyframes draw-web {
   to {
     stroke-dashoffset: 0;
   }
