@@ -28,3 +28,13 @@ Or serve over HTTP (useful for testing on a phone over the same Wi-Fi):
 python3 -m http.server 5555
 # then visit http://<your-mac-ip>:5555/ on your phone
 ```
+
+## Tests
+
+The pure scoring logic (questions, ranks, score calculation) lives in `scoring.js` so it can run in both the browser and Node. Tests use Node's built-in test runner — no install needed:
+
+```sh
+node --test tests/
+# or
+npm test
+```
