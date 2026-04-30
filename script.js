@@ -46,6 +46,7 @@ const QUESTIONS = [
     prompt: "PETER PARKER'S BELOVED UNCLE WAS NAMED UNCLE _______",
     placeholder: "his first name",
     answer: "ben",
+    hint: "Βενιαμίν in greek",
     label: "FILL IN THE BLANK",
   },
   {
@@ -179,7 +180,9 @@ function renderMC(screen, q) {
   const choices = el("div", "choices");
   const buttons = [];
   q.choices.forEach((c, i) => {
-    const btn = el("button", "choice", c);
+    const btn = el("button", "choice");
+    btn.appendChild(el("span", "choice-num", String(i + 1)));
+    btn.appendChild(el("span", "choice-text", c));
     if (state.answers[state.qIndex] === i) btn.classList.add("selected");
     btn.addEventListener("click", () => {
       state.answers[state.qIndex] = i;
@@ -458,5 +461,31 @@ function el(tag, cls, text) {
   if (text !== undefined && text !== null) e.textContent = text;
   return e;
 }
+
+document.addEventListener("keydown", (e) => {
+  if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+
+  if (state.screen === "question") {
+    const q = QUESTIONS[state.qIndex];
+    if (q.type === "mc") {
+      const num = parseInt(e.key, 10);
+      if (num >= 1 && num <= q.choices.length) {
+        e.preventDefault();
+        const choiceEls = document.querySelectorAll(".choices .choice");
+        const target = choiceEls[num - 1];
+        if (target) target.click();
+        return;
+      }
+    }
+  }
+
+  if (e.key === "Enter") {
+    const btn = document.querySelector(".btn-bottom:not(:disabled)");
+    if (btn) {
+      e.preventDefault();
+      btn.click();
+    }
+  }
+});
 
 render();

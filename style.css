@@ -248,12 +248,15 @@ main {
   font-family: "Inter", sans-serif;
   font-size: 16px;
   font-weight: 500;
-  padding: 16px 18px;
+  padding: 14px 16px;
   border-radius: 12px;
   text-align: left;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s, transform 0.1s;
   -webkit-tap-highlight-color: transparent;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .choice:active {
@@ -264,6 +267,30 @@ main {
   background: var(--spider-red);
   border-color: var(--spider-white);
   font-weight: 600;
+}
+
+.choice-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 6px;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
+  flex-shrink: 0;
+}
+
+.choice.selected .choice-num {
+  border-color: var(--spider-white);
+  color: var(--spider-white);
+}
+
+.choice-text {
+  flex: 1;
 }
 
 /* ---------- Fill-in-the-blank (Jeopardy) ---------- */
