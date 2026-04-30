@@ -86,6 +86,14 @@ const QUESTIONS = [
   },
   {
     type: "mc",
+    prompt: "What is the best boro in NYC?",
+    choices: ["Manhattan", "Brooklyn", "Queens", "The Bronx"],
+    answer: 2,
+    requireCorrect: true,
+    wrongMessage: "Wrong answer",
+  },
+  {
+    type: "mc",
     prompt: 'Who is the lead Spider-Man in "Into the Spider-Verse" (2018)?',
     choices: ["Peter Parker", "Ben Reilly", "Miles Morales", "Gwen Stacy"],
     answer: 2,

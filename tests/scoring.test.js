@@ -156,3 +156,13 @@ test("RANKS top tier is reachable at the maximum possible score", () => {
   const top = RANKS[RANKS.length - 1];
   assert.strictEqual(getRank(MAX_SCORE).title, top.title);
 });
+
+test("Queens borough question requires Queens before proceeding", () => {
+  const q = QUESTIONS.find((question) =>
+    question.prompt.toLowerCase().includes("best boro"),
+  );
+  assert.ok(q, "expected a best boro question");
+  assert.strictEqual(q.requireCorrect, true);
+  assert.strictEqual(q.choices[q.answer], "Queens");
+  assert.strictEqual(q.wrongMessage, "Wrong answer");
+});

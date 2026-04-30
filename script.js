@@ -99,6 +99,18 @@ function renderMC(screen, q) {
 
   const choices = el("div", "choices");
   const buttons = [];
+  const feedback = el("div", "choice-error");
+
+  function updateNextState() {
+    const selected = state.answers[state.qIndex];
+    const hasAnswer = selected !== undefined;
+    const isCorrect = isCorrectChoice(q, selected);
+    next.disabled = q.requireCorrect ? !isCorrect : !hasAnswer;
+    feedback.textContent = q.requireCorrect && hasAnswer && !isCorrect
+      ? q.wrongMessage || "Wrong answer"
+      : "";
+  }
+
   q.choices.forEach((c, i) => {
     const btn = el("button", "choice");
     btn.appendChild(el("span", "choice-num", String(i + 1)));
@@ -108,16 +120,26 @@ function renderMC(screen, q) {
       state.answers[state.qIndex] = i;
       buttons.forEach((b) => b.classList.remove("selected"));
       btn.classList.add("selected");
-      next.disabled = false;
+      updateNextState();
     });
     buttons.push(btn);
     choices.appendChild(btn);
   });
   screen.appendChild(choices);
 
+  if (q.requireCorrect) {
+    feedback.setAttribute("aria-live", "polite");
+    screen.appendChild(feedback);
+  }
+
   const next = nextButton();
-  next.disabled = state.answers[state.qIndex] === undefined;
+  updateNextState();
   screen.appendChild(next);
+}
+
+function isCorrectChoice(q, choiceIndex) {
+  const accepted = Array.isArray(q.answer) ? q.answer : [q.answer];
+  return accepted.includes(choiceIndex);
 }
 
 function renderFill(screen, q) {

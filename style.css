@@ -297,6 +297,16 @@ main {
   flex: 1;
 }
 
+.choice-error {
+  min-height: 20px;
+  margin: -10px 0 18px;
+  color: var(--spider-red);
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+
 /* ---------- Fill-in-the-blank (Jeopardy) ---------- */
 .jeopardy {
   background: var(--spider-blue);
