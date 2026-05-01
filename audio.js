@@ -1,14 +1,46 @@
-// Tiny Web Audio synth — no external assets.
+// Tiny Web Audio synth with optional local samples.
 // Lazy-init the AudioContext on first user gesture (browser autoplay policy).
 
 const AudioFx = (() => {
   let ctx = null;
   let muted = false;
   let master = null;
+  const samples = {
+    choose: createSample("sfx/thwip.wav", 0.34),
+    introBoom: createSample("sfx/intro-boom.wav", 0.28),
+  };
 
   try {
     muted = localStorage.getItem("spidey:muted") === "1";
   } catch (_) {}
+
+  function createSample(url, gain) {
+    const sample = {
+      url,
+      gain,
+      bytesPromise: null,
+      buffer: null,
+      decodePromise: null,
+      failed: false,
+    };
+
+    if (typeof window === "undefined" || typeof fetch !== "function") {
+      sample.failed = true;
+      return sample;
+    }
+
+    sample.bytesPromise = fetch(url)
+      .then((response) => {
+        if (!response.ok) throw new Error(`Unable to load ${url}`);
+        return response.arrayBuffer();
+      })
+      .catch(() => {
+        sample.failed = true;
+        return null;
+      });
+
+    return sample;
+  }
 
   function ensureCtx() {
     if (muted) return null;
@@ -17,6 +49,7 @@ const AudioFx = (() => {
       if (!AC) return null;
       ctx = new AC();
       master = createMasterOutput(ctx);
+      warmDecodeSamples(ctx);
     }
     if (ctx.state === "suspended") ctx.resume();
     return ctx;
@@ -38,6 +71,64 @@ const AudioFx = (() => {
 
   function outputNode(c) {
     return master || c.destination;
+  }
+
+  function decodeBytes(c, bytes) {
+    const copy = bytes.slice(0);
+    try {
+      const decoded = c.decodeAudioData(copy);
+      if (decoded && typeof decoded.then === "function") return decoded;
+    } catch (_) {}
+    return new Promise((resolve, reject) => {
+      c.decodeAudioData(bytes.slice(0), resolve, reject);
+    });
+  }
+
+  function warmDecodeSample(sample, c) {
+    if (!sample || sample.buffer || sample.decodePromise || sample.failed) return;
+    sample.decodePromise = sample.bytesPromise
+      .then((bytes) => {
+        if (!bytes) {
+          sample.failed = true;
+          return null;
+        }
+        return decodeBytes(c, bytes);
+      })
+      .then((buffer) => {
+        if (buffer) sample.buffer = buffer;
+        else sample.failed = true;
+        return buffer;
+      })
+      .catch(() => {
+        sample.failed = true;
+        return null;
+      });
+  }
+
+  function warmDecodeSamples(c) {
+    Object.values(samples).forEach((sample) => warmDecodeSample(sample, c));
+  }
+
+  function playSample(name, fallback) {
+    const c = ensureCtx();
+    if (!c) return;
+    const sample = samples[name];
+    if (!sample || sample.failed) {
+      fallback();
+      return;
+    }
+    if (!sample.buffer) {
+      warmDecodeSample(sample, c);
+      fallback();
+      return;
+    }
+
+    const src = c.createBufferSource();
+    const gain = c.createGain();
+    src.buffer = sample.buffer;
+    gain.gain.value = sample.gain;
+    src.connect(gain).connect(outputNode(c));
+    src.start(c.currentTime);
   }
 
   function tone({
@@ -129,6 +220,15 @@ const AudioFx = (() => {
     });
   }
 
+  function clickEffect() {
+    tone({ freq: 620, dur: 0.025, type: "sine", gain: 0.045, release: 0.035 });
+  }
+
+  function crackEffect() {
+    noiseBurst({ dur: 0.1, gain: 0.055, frequency: 2600, q: 1.4 });
+    tone({ freq: 190, dur: 0.08, type: "sine", gain: 0.035, slideTo: 90 });
+  }
+
   return {
     isMuted: () => muted,
     setMuted(v) {
@@ -137,7 +237,11 @@ const AudioFx = (() => {
     },
     // soft UI tick for selecting a choice
     click() {
-      tone({ freq: 620, dur: 0.025, type: "sine", gain: 0.045, release: 0.035 });
+      clickEffect();
+    },
+    // sample-backed choice select, with the soft UI tick as fallback
+    choose() {
+      playSample("choose", clickEffect);
     },
     // soft web lock-in for matching a pair
     match() {
@@ -172,8 +276,7 @@ const AudioFx = (() => {
     },
     // softened crack for the intro web-crack
     crack() {
-      noiseBurst({ dur: 0.1, gain: 0.055, frequency: 2600, q: 1.4 });
-      tone({ freq: 190, dur: 0.08, type: "sine", gain: 0.035, slideTo: 90 });
+      playSample("introBoom", crackEffect);
     },
     // mission-complete fanfare on results
     fanfare() {

@@ -206,7 +206,7 @@ function renderMC(screen, q) {
       });
       updatePointTracker();
       if (isRequiredWrong) AudioFx.wrong();
-      else AudioFx.click();
+      else AudioFx.choose();
       persist();
     });
     buttons.push(btn);

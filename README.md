@@ -38,3 +38,8 @@ node --test tests/
 # or
 npm test
 ```
+
+## Audio Credits
+
+- `sfx/thwip.wav`: "Spiderman Thwip" by whiplaff, CC0.
+- `sfx/intro-boom.wav`: "Cinematic Boom Impact Hit 2021" by eminYILDIRIM, CC BY 4.0.
