@@ -413,6 +413,11 @@ main {
   text-align: center;
 }
 
+.choice-error.success {
+  color: var(--gold);
+  text-shadow: 0 0 10px rgba(245, 197, 24, 0.35);
+}
+
 /* ---------- Fill-in-the-blank (Jeopardy) ---------- */
 .jeopardy {
   background: var(--spider-blue);

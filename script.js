@@ -12,6 +12,7 @@ const focusedFills = new Set();
 const revealedHints = new Set();
 let prevScreenKey = null;
 let introPlayed = false;
+let wrongAnswerMessageIndex = 0;
 
 // Hydrate from localStorage if a recent in-progress session exists.
 (function hydrate() {
@@ -33,6 +34,7 @@ let activeMatchDrag = null;
 let suppressNextMatchClick = false;
 
 const MATCH_DRAG_THRESHOLD = 6;
+const CORRECT_REQUIRED_MESSAGE = "GREAT CHOICE";
 
 const app = document.getElementById("app");
 
@@ -162,14 +164,19 @@ function renderMC(screen, q) {
   const buttons = [];
   const feedback = el("div", "choice-error");
 
-  function updateNextState() {
+  function updateNextState({ rotateWrongMessage = false } = {}) {
     const selected = state.answers[state.qIndex];
     const hasAnswer = selected !== undefined;
     const isCorrect = isCorrectChoice(q, selected);
     next.disabled = q.requireCorrect ? !isCorrect : !hasAnswer;
-    feedback.textContent = q.requireCorrect && hasAnswer && !isCorrect
-      ? q.wrongMessage || "Wrong answer"
-      : "";
+
+    if (!q.requireCorrect || !hasAnswer) {
+      setChoiceFeedback(feedback, "");
+    } else if (isCorrect) {
+      setChoiceFeedback(feedback, CORRECT_REQUIRED_MESSAGE, { success: true });
+    } else if (rotateWrongMessage || !feedback.textContent) {
+      setChoiceFeedback(feedback, nextWrongAnswerMessage());
+    }
   }
 
   q.choices.forEach((c, i) => {
@@ -181,8 +188,9 @@ function renderMC(screen, q) {
       state.answers[state.qIndex] = i;
       buttons.forEach((b) => b.classList.remove("selected"));
       btn.classList.add("selected");
-      updateNextState();
-      if (q.requireCorrect && !isCorrectChoice(q, i)) AudioFx.wrong();
+      const isRequiredWrong = q.requireCorrect && !isCorrectChoice(q, i);
+      updateNextState({ rotateWrongMessage: isRequiredWrong });
+      if (isRequiredWrong) AudioFx.wrong();
       else AudioFx.click();
       persist();
     });
@@ -204,6 +212,21 @@ function renderMC(screen, q) {
 function isCorrectChoice(q, choiceIndex) {
   const accepted = Array.isArray(q.answer) ? q.answer : [q.answer];
   return accepted.includes(choiceIndex);
+}
+
+function setChoiceFeedback(feedback, message, { success = false } = {}) {
+  feedback.textContent = message;
+  feedback.classList.toggle("success", Boolean(message && success));
+}
+
+function nextWrongAnswerMessage() {
+  const messages =
+    typeof WRONG_ANSWER_MESSAGES !== "undefined" && WRONG_ANSWER_MESSAGES.length
+      ? WRONG_ANSWER_MESSAGES
+      : ["Wrong answer"];
+  const message = messages[wrongAnswerMessageIndex % messages.length];
+  wrongAnswerMessageIndex++;
+  return message;
 }
 
 function renderFill(screen, q) {
@@ -424,7 +447,7 @@ function prevQuestionFromKeyboard() {
 function nextQuestionFromKeyboard() {
   const q = QUESTIONS[state.qIndex];
   if (!canKeyboardAdvance(q)) {
-    showRequiredChoiceFeedback(q);
+    showRequiredChoiceFeedback();
     return;
   }
 
@@ -435,9 +458,9 @@ function canKeyboardAdvance(q) {
   return !q.requireCorrect || isCorrectChoice(q, state.answers[state.qIndex]);
 }
 
-function showRequiredChoiceFeedback(q) {
+function showRequiredChoiceFeedback() {
   const feedback = document.querySelector(".choice-error");
-  if (feedback) feedback.textContent = q.wrongMessage || "Wrong answer";
+  if (feedback) setChoiceFeedback(feedback, nextWrongAnswerMessage());
 }
 
 function scrollToTop() {

@@ -3,6 +3,7 @@ const assert = require("node:assert");
 const {
   QUESTIONS,
   RANKS,
+  WRONG_ANSWER_MESSAGES,
   calculateScore,
   getRank,
   shorten,
@@ -172,13 +173,41 @@ test("RANKS top tier is reachable at the maximum possible score", () => {
 
 test("Queens borough question requires Queens before proceeding", () => {
   const q = QUESTIONS.find((question) =>
-    question.prompt.toLowerCase().includes("best boro"),
+    question.prompt.toLowerCase().includes("greatest boro"),
   );
-  assert.ok(q, "expected a best boro question");
+  assert.ok(q, "expected a greatest boro question");
   assert.strictEqual(q.requireCorrect, true);
   assert.strictEqual(q.choices[q.answer], "Queens");
   assert.ok(q.choices.includes("Staten Island"));
-  assert.strictEqual(q.wrongMessage, "eww,");
+});
+
+test("final three questions are blocking city, borough, and neighborhood gates", () => {
+  const finalThree = QUESTIONS.slice(-3);
+  assert.deepStrictEqual(
+    finalThree.map((q) => q.prompt),
+    [
+      "What is the greatest city in the world?",
+      "What is the greatest boro in the world?",
+      "What is the greatest neighborhood in the world?",
+    ],
+  );
+
+  assert.deepStrictEqual(
+    finalThree.map((q) => q.choices[q.answer]),
+    ["New York City", "Queens", "Sunnyside"],
+  );
+
+  finalThree.forEach((q) => {
+    assert.strictEqual(q.type, "mc");
+    assert.strictEqual(q.requireCorrect, true);
+  });
+});
+
+test("wrong answer messages rotate through a shared message list", () => {
+  assert.ok(WRONG_ANSWER_MESSAGES.length >= 6);
+  assert.ok(WRONG_ANSWER_MESSAGES.includes("ewwww, no"));
+  assert.ok(WRONG_ANSWER_MESSAGES.includes("of course no"));
+  assert.ok(WRONG_ANSWER_MESSAGES.includes("WRONG"));
 });
 
 test("quote attribution question points to Norman Osborn", () => {
@@ -195,6 +224,18 @@ test("odd-one-out villain question points to Lex Luthor", () => {
   );
   assert.ok(q, "expected an odd-one-out villain question");
   assert.strictEqual(q.choices[q.answer], "Lex Luthor");
+});
+
+test("Miles and Peter origin questions are adjacent", () => {
+  const milesIdx = QUESTIONS.findIndex(
+    (question) => question.prompt === "Where is Miles Morales from?",
+  );
+  assert.ok(milesIdx >= 0, "expected a Miles origin question");
+  assert.strictEqual(QUESTIONS[milesIdx].choices[QUESTIONS[milesIdx].answer], "Brooklyn");
+
+  const peter = QUESTIONS[milesIdx + 1];
+  assert.strictEqual(peter.prompt, "Where is Peter Parker from?");
+  assert.strictEqual(peter.choices[peter.answer], "Queens");
 });
 
 test("matching villain tiles include image backgrounds", () => {

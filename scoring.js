@@ -131,17 +131,15 @@ const QUESTIONS = [
   },
   {
     type: "mc",
-    prompt: "In Into the Spider-Verse, what city does Miles Morales live in?",
+    prompt: "Where is Miles Morales from?",
     choices: ["Los Angeles", "Brooklyn", "Queens", "Gotham"],
     answer: 1,
   },
   {
     type: "mc",
-    prompt: "What is the best boro in NYC?",
-    choices: ["Manhattan", "Brooklyn", "The Bronx", "Staten Island", "Queens"],
-    answer: 4,
-    requireCorrect: true,
-    wrongMessage: "eww,",
+    prompt: "Where is Peter Parker from?",
+    choices: ["Brooklyn", "Queens", "Manhattan", "Staten Island"],
+    answer: 1,
   },
   {
     type: "mc",
@@ -161,6 +159,60 @@ const QUESTIONS = [
     choices: ["Peter Parker", "Ben Reilly", "Miles Morales", "Gwen Stacy"],
     answer: 2,
   },
+  {
+    type: "mc",
+    prompt: "What is the greatest city in the world?",
+    choices: [
+      "Rome",
+      "London",
+      "Melbourne",
+      "Cape Town",
+      "Paris",
+      "Tokyo",
+      "Dubai",
+      "Cairo",
+      "Singapore",
+      "Lagos",
+      "New York City",
+    ],
+    answer: 10,
+    requireCorrect: true,
+  },
+  {
+    type: "mc",
+    prompt: "What is the greatest boro in the world?",
+    choices: ["Manhattan", "Brooklyn", "The Bronx", "Staten Island", "Queens"],
+    answer: 4,
+    requireCorrect: true,
+  },
+  {
+    type: "mc",
+    prompt: "What is the greatest neighborhood in the world?",
+    choices: [
+      "SoHo",
+      "Shibuya",
+      "Montmartre",
+      "Camden",
+      "Le Marais",
+      "Sunnyside",
+      "Harlem",
+      "Kreuzberg",
+      "Trastevere",
+      "Williamsburg",
+    ],
+    answer: 5,
+    requireCorrect: true,
+  },
+];
+
+const WRONG_ANSWER_MESSAGES = [
+  "ewwww, no",
+  "of course no",
+  "WRONG",
+  "not even close",
+  "spider-sense says no",
+  "try again",
+  "absolutely not",
 ];
 
 const RANKS = [
@@ -247,5 +299,12 @@ function calculateScore(answers, questions = QUESTIONS) {
 }
 
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { QUESTIONS, RANKS, calculateScore, getRank, shorten };
+  module.exports = {
+    QUESTIONS,
+    RANKS,
+    WRONG_ANSWER_MESSAGES,
+    calculateScore,
+    getRank,
+    shorten,
+  };
 }
