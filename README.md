@@ -29,15 +29,6 @@ python3 -m http.server 5555
 # then visit http://<your-mac-ip>:5555/ on your phone
 ```
 
-## Deployment & PR previews
-
-Deploys are handled by Netlify (configured via `netlify.toml`):
-
-- Every push to `main` triggers a production deploy.
-- Every pull request gets an automatic Deploy Preview at a unique URL, posted as a comment on the PR.
-
-No build step — Netlify publishes the repo root as a static site, excluding `tests/` and the package metadata via `netlify.toml`.
-
 ## Tests
 
 The pure scoring logic (questions, ranks, score calculation) lives in `scoring.js` so it can run in both the browser and Node. Tests use Node's built-in test runner — no install needed:
