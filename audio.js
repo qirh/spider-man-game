@@ -1,4 +1,4 @@
-// Sample-only audio. The only active sound is the thwip on question advance.
+// Sample-only audio. Samples prefetch on load and decode on first user gesture.
 // Lazy-init the AudioContext on first user gesture (browser autoplay policy).
 
 const AudioFx = (() => {
@@ -7,6 +7,7 @@ const AudioFx = (() => {
   let master = null;
   const samples = {
     advance: createSample("sfx/thwip.wav", 0.34),
+    introBoom: createSample("sfx/intro-boom.wav", 0.28),
   };
 
   try {
@@ -144,6 +145,9 @@ const AudioFx = (() => {
     },
     advance() {
       playSample("advance");
+    },
+    introBoom() {
+      playSample("introBoom");
     },
   };
 })();

@@ -117,6 +117,7 @@ function playIntro() {
 
 function startQuiz() {
   cancelActiveMatchDrag();
+  AudioFx.introBoom();
   state.screen = "question";
   state.qIndex = 0;
   state.answers = [];
