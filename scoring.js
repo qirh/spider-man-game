@@ -222,22 +222,22 @@ const RANKS = [
     blurb: "Better stick to the bus and let the heroes handle it.",
   },
   {
-    min: 5,
+    min: 8,
     title: "FRIENDLY NEIGHBOR",
     blurb: "You know the basics. Spidey would wave.",
   },
   {
-    min: 8,
+    min: 13,
     title: "WEB SLINGER",
     blurb: "Solid spidey-knowledge. J. Jonah would hate to admit it.",
   },
   {
-    min: 11,
+    min: 18,
     title: "TRUE BELIEVER",
     blurb: "Excelsior! You know your Spider-Man!",
   },
   {
-    min: 14,
+    min: 22,
     title: "SPIDER-SENSE MASTER",
     blurb: "With great trivia comes great responsibility.",
   },
