@@ -4,6 +4,7 @@
 const AudioFx = (() => {
   let ctx = null;
   let muted = false;
+  let master = null;
 
   try {
     muted = localStorage.getItem("spidey:muted") === "1";
@@ -15,15 +16,44 @@ const AudioFx = (() => {
       const AC = window.AudioContext || window.webkitAudioContext;
       if (!AC) return null;
       ctx = new AC();
+      master = createMasterOutput(ctx);
     }
     if (ctx.state === "suspended") ctx.resume();
     return ctx;
   }
 
-  function tone({ freq = 440, dur = 0.12, type = "sine", gain = 0.18, attack = 0.005, release = 0.08, slideTo = null }) {
+  function createMasterOutput(c) {
+    const compressor = c.createDynamicsCompressor();
+    compressor.threshold.value = -24;
+    compressor.knee.value = 18;
+    compressor.ratio.value = 6;
+    compressor.attack.value = 0.004;
+    compressor.release.value = 0.18;
+
+    const out = c.createGain();
+    out.gain.value = 0.46;
+    compressor.connect(out).connect(c.destination);
+    return compressor;
+  }
+
+  function outputNode(c) {
+    return master || c.destination;
+  }
+
+  function tone({
+    freq = 440,
+    dur = 0.12,
+    type = "sine",
+    gain = 0.08,
+    attack = 0.006,
+    release = 0.08,
+    slideTo = null,
+    delay = 0,
+    filter = null,
+  }) {
     const c = ensureCtx();
     if (!c) return;
-    const t0 = c.currentTime;
+    const t0 = c.currentTime + delay;
     const osc = c.createOscillator();
     const g = c.createGain();
     osc.type = type;
@@ -31,28 +61,72 @@ const AudioFx = (() => {
     if (slideTo) osc.frequency.exponentialRampToValueAtTime(slideTo, t0 + dur);
     g.gain.setValueAtTime(0, t0);
     g.gain.linearRampToValueAtTime(gain, t0 + attack);
-    g.gain.linearRampToValueAtTime(0, t0 + dur + release);
-    osc.connect(g).connect(c.destination);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur + release);
+
+    if (filter) {
+      const f = c.createBiquadFilter();
+      f.type = filter.type;
+      f.frequency.setValueAtTime(filter.frequency, t0);
+      if (filter.q) f.Q.value = filter.q;
+      osc.connect(f).connect(g).connect(outputNode(c));
+    } else {
+      osc.connect(g).connect(outputNode(c));
+    }
+
     osc.start(t0);
     osc.stop(t0 + dur + release + 0.02);
   }
 
-  function noiseBurst({ dur = 0.08, gain = 0.12 }) {
+  function noiseBurst({
+    dur = 0.08,
+    gain = 0.06,
+    delay = 0,
+    filterType = "bandpass",
+    frequency = 2400,
+    q = 0.8,
+  } = {}) {
     const c = ensureCtx();
     if (!c) return;
-    const t0 = c.currentTime;
+    const t0 = c.currentTime + delay;
     const buf = c.createBuffer(1, Math.floor(c.sampleRate * dur), c.sampleRate);
     const data = buf.getChannelData(0);
-    for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
+    for (let i = 0; i < data.length; i++) {
+      const fade = 1 - i / data.length;
+      data[i] = (Math.random() * 2 - 1) * fade * fade;
+    }
+
     const src = c.createBufferSource();
     src.buffer = buf;
     const g = c.createGain();
-    g.gain.value = gain;
+    g.gain.setValueAtTime(gain, t0);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
     const filt = c.createBiquadFilter();
-    filt.type = "highpass";
-    filt.frequency.value = 1200;
-    src.connect(filt).connect(g).connect(c.destination);
+    filt.type = filterType;
+    filt.frequency.value = frequency;
+    filt.Q.value = q;
+    src.connect(filt).connect(g).connect(outputNode(c));
     src.start(t0);
+  }
+
+  function webZip({ delay = 0, gain = 0.055 } = {}) {
+    tone({
+      freq: 1320,
+      slideTo: 520,
+      dur: 0.09,
+      type: "triangle",
+      gain,
+      release: 0.06,
+      delay,
+      filter: { type: "bandpass", frequency: 1800, q: 1.1 },
+    });
+    noiseBurst({
+      dur: 0.07,
+      gain: gain * 0.7,
+      delay,
+      filterType: "bandpass",
+      frequency: 3600,
+      q: 1.2,
+    });
   }
 
   return {
@@ -61,37 +135,58 @@ const AudioFx = (() => {
       muted = !!v;
       try { localStorage.setItem("spidey:muted", muted ? "1" : "0"); } catch (_) {}
     },
-    // tiny tick for selecting a choice
-    click() { tone({ freq: 520, dur: 0.04, type: "square", gain: 0.08, release: 0.04 }); },
-    // satisfying lock-in for matching a villain
-    match() {
-      tone({ freq: 660, dur: 0.08, type: "triangle", gain: 0.14 });
-      setTimeout(() => tone({ freq: 990, dur: 0.1, type: "triangle", gain: 0.14 }), 70);
+    // soft UI tick for selecting a choice
+    click() {
+      tone({ freq: 620, dur: 0.025, type: "sine", gain: 0.045, release: 0.035 });
     },
-    // page/question advance
-    advance() { tone({ freq: 380, dur: 0.06, type: "sine", gain: 0.1, slideTo: 560 }); },
-    // negative buzz for wrong gated answer
-    wrong() { tone({ freq: 220, dur: 0.18, type: "sawtooth", gain: 0.12, slideTo: 110 }); },
-    // hint reveal sparkle
+    // soft web lock-in for matching a pair
+    match() {
+      webZip({ gain: 0.06 });
+      tone({ freq: 740, dur: 0.08, type: "sine", gain: 0.055, delay: 0.055 });
+      tone({ freq: 980, dur: 0.09, type: "sine", gain: 0.045, delay: 0.1 });
+    },
+    // page/question advance: a very short web-sling zip
+    advance() {
+      webZip({ gain: 0.045 });
+    },
+    // gentle wrong-answer thud instead of a harsh buzz
+    wrong() {
+      tone({ freq: 160, dur: 0.1, type: "sine", gain: 0.065, slideTo: 105 });
+      noiseBurst({
+        dur: 0.06,
+        gain: 0.025,
+        filterType: "lowpass",
+        frequency: 420,
+        q: 0.7,
+      });
+    },
+    // hint reveal sparkle, quieter than before
     hint() {
-      tone({ freq: 880, dur: 0.06, type: "sine", gain: 0.08 });
-      setTimeout(() => tone({ freq: 1320, dur: 0.08, type: "sine", gain: 0.08 }), 60);
+      tone({ freq: 880, dur: 0.045, type: "sine", gain: 0.04 });
+      tone({ freq: 1320, dur: 0.06, type: "sine", gain: 0.04, delay: 0.055 });
     },
     // web-thwip for the intro spider drop
     thwip() {
-      tone({ freq: 1200, dur: 0.18, type: "sawtooth", gain: 0.1, slideTo: 220 });
-      noiseBurst({ dur: 0.12, gain: 0.06 });
+      webZip({ gain: 0.07 });
+      tone({ freq: 410, dur: 0.12, type: "sine", gain: 0.035, slideTo: 260, delay: 0.04 });
     },
-    // glass-crack for the intro web-crack
+    // softened crack for the intro web-crack
     crack() {
-      noiseBurst({ dur: 0.18, gain: 0.18 });
-      tone({ freq: 180, dur: 0.12, type: "square", gain: 0.08, slideTo: 60 });
+      noiseBurst({ dur: 0.1, gain: 0.055, frequency: 2600, q: 1.4 });
+      tone({ freq: 190, dur: 0.08, type: "sine", gain: 0.035, slideTo: 90 });
     },
     // mission-complete fanfare on results
     fanfare() {
       const notes = [523.25, 659.25, 783.99, 1046.5]; // C5 E5 G5 C6
       notes.forEach((f, i) => {
-        setTimeout(() => tone({ freq: f, dur: 0.18, type: "triangle", gain: 0.16, release: 0.18 }), i * 110);
+        tone({
+          freq: f,
+          dur: 0.13,
+          type: "sine",
+          gain: 0.065,
+          release: 0.16,
+          delay: i * 0.105,
+        });
       });
     },
   };
