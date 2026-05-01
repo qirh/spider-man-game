@@ -79,11 +79,11 @@ function renderWelcome() {
     introPlayed = true;
     // Cold page loads are not user-activated in mobile browsers, so the
     // first intro stays visual-only instead of constructing Web Audio early.
-    playIntro({ withSound: false });
+    playIntro();
   }
 }
 
-function playIntro({ withSound = false } = {}) {
+function playIntro() {
   const overlay = document.createElement("div");
   overlay.className = "web-crack";
   overlay.setAttribute("aria-hidden", "true");
@@ -112,10 +112,6 @@ function playIntro({ withSound = false } = {}) {
     </svg>
   `;
   document.body.appendChild(overlay);
-  if (withSound) {
-    AudioFx.crack();
-    setTimeout(() => AudioFx.thwip(), 280);
-  }
   setTimeout(() => overlay.remove(), 1200);
 }
 
@@ -204,8 +200,6 @@ function renderMC(screen, q) {
         rotateCorrectMessage: isRequiredCorrect,
       });
       updatePointTracker();
-      if (isRequiredWrong) AudioFx.wrong();
-      else AudioFx.choose();
       persist();
     });
     buttons.push(btn);
@@ -296,7 +290,6 @@ function renderFill(screen, q) {
         revealedHints.add(state.qIndex);
         wrap.innerHTML = "";
         wrap.appendChild(el("div", "hint-text", `💡 ${q.hint}`));
-        AudioFx.hint();
         persist();
       });
       wrap.appendChild(hintBtn);
@@ -440,7 +433,6 @@ function nextQuestion() {
   if (state.qIndex >= QUESTIONS.length) {
     state.screen = "results";
     Persistence.clear();
-    AudioFx.fanfare();
   } else {
     persist();
   }
@@ -457,7 +449,6 @@ function prevQuestion() {
     state.qIndex--;
     persist();
   }
-  AudioFx.click();
   render();
   scrollToTop();
 }
@@ -673,7 +664,6 @@ function setMatchPair(leftId, rightId) {
     if (key !== leftId && pairs[key] === rightId) delete pairs[key];
   });
   pairs[leftId] = rightId;
-  AudioFx.match();
   persist();
 }
 
@@ -1055,7 +1045,6 @@ function handleArrowNavigation(e) {
   btn.addEventListener("click", () => {
     AudioFx.setMuted(!AudioFx.isMuted());
     sync();
-    if (!AudioFx.isMuted()) AudioFx.click();
   });
   sync();
 })();

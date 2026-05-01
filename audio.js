@@ -136,22 +136,12 @@ const AudioFx = (() => {
     }
   }
 
-  function noop() {}
-
   return {
     isMuted: () => muted,
     setMuted(v) {
       muted = !!v;
       try { localStorage.setItem("spidey:muted", muted ? "1" : "0"); } catch (_) {}
     },
-    click: noop,
-    choose: noop,
-    match: noop,
-    wrong: noop,
-    hint: noop,
-    thwip: noop,
-    crack: noop,
-    fanfare: noop,
     advance() {
       playSample("advance");
     },
