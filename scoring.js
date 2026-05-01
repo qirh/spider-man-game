@@ -3,7 +3,7 @@ const QUESTIONS = [
     type: "mc",
     prompt: "What is Spider-Man's real name?",
     choices: ["Peter Parker", "Miles Morales", "Lewis Mumford", "Tony Stark"],
-    answer: 0,
+    answer: [0, 1],
   },
   {
     type: "mc",

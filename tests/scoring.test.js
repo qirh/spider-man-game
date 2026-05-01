@@ -42,20 +42,29 @@ test("calculateScore: empty answers gives score 0 and full possible total", () =
 test("multiple-choice questions have valid answer indexes", () => {
   QUESTIONS.forEach((q, idx) => {
     if (q.type !== "mc") return;
+    const answers = Array.isArray(q.answer) ? q.answer : [q.answer];
     assert.ok(
-      Number.isInteger(q.answer),
-      `question ${idx + 1} should use one answer index`,
+      answers.length > 0,
+      `question ${idx + 1} should have at least one answer index`,
     );
-    assert.ok(
-      q.answer >= 0 && q.answer < q.choices.length,
-      `question ${idx + 1} answer should point to an existing choice`,
-    );
+    answers.forEach((answer) => {
+      assert.ok(
+        Number.isInteger(answer),
+        `question ${idx + 1} answer should use integer indexes`,
+      );
+      assert.ok(
+        answer >= 0 && answer < q.choices.length,
+        `question ${idx + 1} answer should point to an existing choice`,
+      );
+    });
   });
 });
 
 test("multiple-choice correct answers are mixed across option positions", () => {
   const answerPositions = new Set(
-    QUESTIONS.filter((q) => q.type === "mc").map((q) => q.answer),
+    QUESTIONS.filter((q) => q.type === "mc").flatMap((q) =>
+      Array.isArray(q.answer) ? q.answer : [q.answer],
+    ),
   );
 
   assert.ok(answerPositions.size >= 3, "expected mixed answer positions");
@@ -67,17 +76,36 @@ test("calculateScore: multiple-choice questions score only their answer index", 
   QUESTIONS.forEach((q, idx) => {
     if (q.type !== "mc") return;
 
-    const correct = [];
-    correct[idx] = q.answer;
-    assert.strictEqual(
-      calculateScore(correct).score,
-      questionPoints(q),
-      `question ${idx + 1}`,
-    );
+    const accepted = Array.isArray(q.answer) ? q.answer : [q.answer];
+    accepted.forEach((answer) => {
+      const correct = [];
+      correct[idx] = answer;
+      assert.strictEqual(
+        calculateScore(correct).score,
+        questionPoints(q),
+        `question ${idx + 1}`,
+      );
+    });
 
     const wrong = [];
-    wrong[idx] = (q.answer + 1) % q.choices.length;
+    wrong[idx] = q.choices.findIndex(
+      (_, choiceIndex) => !accepted.includes(choiceIndex),
+    );
     assert.strictEqual(calculateScore(wrong).score, 0, `question ${idx + 1}`);
+  });
+});
+
+test("Spider-Man real name question accepts Peter Parker and Miles Morales", () => {
+  const idx = QUESTIONS.findIndex(
+    (q) => q.prompt === "What is Spider-Man's real name?",
+  );
+  const q = QUESTIONS[idx];
+  assert.deepStrictEqual(q.answer, [0, 1]);
+
+  [0, 1].forEach((answer) => {
+    const answers = [];
+    answers[idx] = answer;
+    assert.strictEqual(calculateScore(answers).score, 1);
   });
 });
 

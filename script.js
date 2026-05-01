@@ -700,7 +700,10 @@ function renderPointTracker(q) {
 function updatePointTracker(root = document) {
   const current = root.querySelector("[data-point-current]");
   if (!current) return;
-  const { score, total } = calculateScore(state.answers);
+  const completedAnswers = state.answers.slice(0, state.qIndex);
+  const completedQuestions = QUESTIONS.slice(0, state.qIndex);
+  const { score } = calculateScore(completedAnswers, completedQuestions);
+  const { total } = calculateScore([]);
   current.textContent = `${score} / ${formatPoints(total)}`;
 }
 
