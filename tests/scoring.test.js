@@ -196,6 +196,7 @@ test("final three questions are blocking city, borough, and neighborhood gates",
     finalThree.map((q) => q.choices[q.answer]),
     ["New York City", "Queens", "Sunnyside"],
   );
+  assert.strictEqual(finalThree[2].choices.at(-1), "Sunnyside");
 
   finalThree.forEach((q) => {
     assert.strictEqual(q.type, "mc");
