@@ -45,6 +45,7 @@ const QUESTIONS = [
   {
     type: "match",
     prompt: "Match each villain to their real name.",
+    breakdownLabel: "Villain matching",
     help: "Draw a line from each villain to their real name.",
     left: [
       {
@@ -87,6 +88,7 @@ const QUESTIONS = [
   {
     type: "match",
     prompt: "Match each trip/location to the movie.",
+    breakdownLabel: "Trip/location matching",
     help: "Draw a line from each trip or location to the movie.",
     left: [
       { id: "space", label: "Space" },
@@ -288,7 +290,7 @@ function calculateScore(answers, questions = QUESTIONS) {
       });
       score += got;
       breakdown.push({
-        label: "Villain matching",
+        label: q.breakdownLabel || shorten(q.prompt),
         got,
         possible: q.left.length,
       });

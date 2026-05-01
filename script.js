@@ -78,11 +78,13 @@ function renderWelcome() {
 
   if (!introPlayed) {
     introPlayed = true;
-    playIntro();
+    // Cold page loads are not user-activated in mobile browsers, so the
+    // first intro stays visual-only instead of constructing Web Audio early.
+    playIntro({ withSound: false });
   }
 }
 
-function playIntro() {
+function playIntro({ withSound = false } = {}) {
   const overlay = document.createElement("div");
   overlay.className = "web-crack";
   overlay.setAttribute("aria-hidden", "true");
@@ -111,8 +113,10 @@ function playIntro() {
     </svg>
   `;
   document.body.appendChild(overlay);
-  AudioFx.crack();
-  setTimeout(() => AudioFx.thwip(), 280);
+  if (withSound) {
+    AudioFx.crack();
+    setTimeout(() => AudioFx.thwip(), 280);
+  }
   setTimeout(() => overlay.remove(), 1200);
 }
 
@@ -904,10 +908,18 @@ window.addEventListener("resize", () => {
   });
 });
 
-document.addEventListener("keydown", (e) => {
-  if (handleArrowNavigation(e)) return;
+function isEditableTarget(target) {
+  if (!target) return false;
+  return (
+    target.tagName === "INPUT" ||
+    target.tagName === "TEXTAREA" ||
+    target.isContentEditable
+  );
+}
 
-  if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+document.addEventListener("keydown", (e) => {
+  if (isEditableTarget(e.target)) return;
+  if (handleArrowNavigation(e)) return;
 
   if (state.screen === "question") {
     const q = QUESTIONS[state.qIndex];

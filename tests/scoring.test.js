@@ -145,6 +145,18 @@ test("calculateScore: breakdown row count matches question count", () => {
   assert.strictEqual(breakdown.length, QUESTIONS.length);
 });
 
+test("calculateScore: matching breakdown labels describe each round", () => {
+  const { breakdown } = calculateScore([]);
+  assert.ok(
+    breakdown.some((row) => row.label === "Villain matching"),
+    "expected villain matching breakdown label",
+  );
+  assert.ok(
+    breakdown.some((row) => row.label === "Trip/location matching"),
+    "expected trip/location matching breakdown label",
+  );
+});
+
 test("shorten leaves strings at or below the limit unchanged", () => {
   assert.strictEqual(shorten("hello"), "hello");
   assert.strictEqual(shorten("a".repeat(40)), "a".repeat(40));
