@@ -418,35 +418,69 @@ main {
   z-index: 1;
 }
 
-.match-lines line {
-  stroke: var(--gold);
-  stroke-width: 3;
+.match-lines .web-strand,
+.match-lines .web-cross-thread {
+  fill: none;
   stroke-linecap: round;
-  filter: drop-shadow(0 0 4px rgba(245, 197, 24, 0.4));
-  stroke-dasharray: 400;
-  stroke-dashoffset: 400;
-  animation: draw-line 0.4s ease-out forwards;
+  stroke-linejoin: round;
 }
 
-.match-lines circle {
-  fill: var(--gold);
-  filter: drop-shadow(0 0 3px rgba(245, 197, 24, 0.5));
+.match-lines .web-strand {
+  stroke: rgba(255, 255, 255, 0.92);
+  filter:
+    drop-shadow(0 0 3px rgba(255, 255, 255, 0.62))
+    drop-shadow(0 0 8px rgba(245, 197, 24, 0.28));
+  stroke-dasharray: 400;
+  stroke-dashoffset: 400;
+  animation: draw-web 0.42s ease-out forwards;
+}
+
+.match-lines .web-strand-main {
+  stroke-width: 2.7;
+}
+
+.match-lines .web-strand-side {
+  opacity: 0.58;
+  stroke-width: 1.2;
+}
+
+.match-lines .web-cross-thread {
+  stroke: rgba(255, 255, 255, 0.72);
+  stroke-width: 1.1;
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.35));
+  stroke-dasharray: 34;
+  stroke-dashoffset: 34;
+  animation: draw-web 0.28s ease-out forwards;
+}
+
+.match-lines .web-knot {
+  fill: var(--spider-white);
+  stroke: rgba(245, 197, 24, 0.72);
+  stroke-width: 1.5;
+  filter:
+    drop-shadow(0 0 4px rgba(255, 255, 255, 0.7))
+    drop-shadow(0 0 9px rgba(245, 197, 24, 0.36));
 }
 
 .match-lines .match-preview-line {
+  fill: none;
   stroke: var(--spider-white);
-  stroke-width: 3;
+  stroke-width: 2.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
   stroke-dasharray: none;
   stroke-dashoffset: 0;
   animation: none;
-  opacity: 0.9;
+  opacity: 0.88;
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.45));
 }
 
 .match-lines .match-preview-dot {
   fill: var(--spider-white);
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.58));
 }
 
-@keyframes draw-line {
+@keyframes draw-web {
   to {
     stroke-dashoffset: 0;
   }
@@ -472,7 +506,7 @@ main {
   border-radius: 12px;
   cursor: pointer;
   text-align: center;
-  height: 84px;
+  height: 92px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -492,16 +526,81 @@ main {
   line-height: 1;
 }
 
+.match-image-item {
+  justify-content: flex-end;
+  padding: 0;
+  overflow: hidden;
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(5, 8, 28, 0.02) 0%,
+      rgba(5, 8, 28, 0.26) 46%,
+      rgba(5, 8, 28, 0.94) 100%
+    ),
+    var(--match-image);
+  background-position: center, var(--match-image-position, center);
+  background-repeat: no-repeat;
+  background-size: cover, var(--match-image-size, cover);
+  border-color: rgba(255, 255, 255, 0.26);
+}
+
+.match-image-item::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 55% 18%, rgba(255, 255, 255, 0.18), transparent 34%),
+    linear-gradient(90deg, rgba(7, 10, 31, 0.36), transparent 45%);
+  pointer-events: none;
+}
+
+.match-image-label {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  padding: 22px 6px 8px;
+  background: linear-gradient(180deg, transparent, rgba(5, 8, 28, 0.92));
+  color: var(--spider-white);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.1;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.88);
+}
+
 .match-item.drawing-source,
 .match-item.drop-target {
   background: var(--spider-red);
   border-color: var(--spider-white);
 }
 
+.match-image-item.drawing-source,
+.match-image-item.drop-target {
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(194, 24, 7, 0.12) 0%,
+      rgba(194, 24, 7, 0.46) 48%,
+      rgba(82, 9, 8, 0.96) 100%
+    ),
+    var(--match-image);
+}
+
 .match-item.matched {
   background: rgba(245, 197, 24, 0.12);
   border-color: var(--gold);
   color: var(--gold);
+}
+
+.match-image-item.matched {
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(245, 197, 24, 0.04) 0%,
+      rgba(31, 28, 10, 0.22) 48%,
+      rgba(26, 22, 6, 0.94) 100%
+    ),
+    var(--match-image);
+  color: var(--spider-white);
 }
 
 .pair-num {

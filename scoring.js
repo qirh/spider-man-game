@@ -46,10 +46,34 @@ const QUESTIONS = [
     type: "match",
     prompt: "Match each villain to their real name.",
     left: [
-      { id: "a", emoji: "🐙", label: "Doc Ock" },
-      { id: "b", emoji: "🎃", label: "Green Goblin" },
-      { id: "c", emoji: "🦅", label: "Vulture" },
-      { id: "d", emoji: "🖤", label: "Venom" },
+      {
+        id: "a",
+        label: "Doc Ock",
+        imageUrl: "https://cdn.marvel.com/content/2x/226ock_ons_mas_dsk_01.jpg",
+        imagePosition: "73% 58%",
+        imageSize: "auto 230%",
+      },
+      {
+        id: "b",
+        label: "Green Goblin",
+        imageUrl: "https://cdn.marvel.com/content/2x/104gno_ons_mas_dsk_01.jpg",
+        imagePosition: "67% 46%",
+        imageSize: "auto 145%",
+      },
+      {
+        id: "c",
+        label: "Vulture",
+        imageUrl: "https://cdn.marvel.com/content/2x/105vat_ons_mas_dsk_01.jpg",
+        imagePosition: "58% 50%",
+        imageSize: "auto 145%",
+      },
+      {
+        id: "d",
+        label: "Venom",
+        imageUrl: "https://cdn.marvel.com/content/2x/103veb_com_mas_dsk_03_0.jpg",
+        imagePosition: "44% 44%",
+        imageSize: "auto 145%",
+      },
     ],
     right: [
       { id: "1", label: "Norman Osborn" },
@@ -91,6 +115,18 @@ const QUESTIONS = [
     answer: 0,
     requireCorrect: true,
     wrongMessage: "Wrong answer",
+  },
+  {
+    type: "mc",
+    prompt: "Who said \"I'm something of a scientist myself\"?",
+    choices: ["Norman Osborn", "Otto Octavius", "Peter Parker", "Tony Stark"],
+    answer: 0,
+  },
+  {
+    type: "mc",
+    prompt: "Which of these is NOT a Spider-Man villain?",
+    choices: ["Lex Luthor", "Mysterio", "Electro", "Kraven the Hunter"],
+    answer: 0,
   },
   {
     type: "mc",
