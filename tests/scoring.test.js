@@ -34,24 +34,40 @@ test("calculateScore: empty answers gives score 0 and full possible total", () =
   assert.strictEqual(total, MAX_SCORE);
 });
 
-test("multiple-choice questions put the correct answer first", () => {
+test("multiple-choice questions have valid answer indexes", () => {
   QUESTIONS.forEach((q, idx) => {
     if (q.type !== "mc") return;
-    assert.strictEqual(q.answer, 0, `question ${idx + 1}`);
-    assert.ok(q.choices[0], `question ${idx + 1} should have a first choice`);
+    assert.ok(
+      Number.isInteger(q.answer),
+      `question ${idx + 1} should use one answer index`,
+    );
+    assert.ok(
+      q.answer >= 0 && q.answer < q.choices.length,
+      `question ${idx + 1} answer should point to an existing choice`,
+    );
   });
 });
 
-test("calculateScore: multiple-choice questions score only first choices", () => {
+test("multiple-choice correct answers are mixed across option positions", () => {
+  const answerPositions = new Set(
+    QUESTIONS.filter((q) => q.type === "mc").map((q) => q.answer),
+  );
+
+  assert.ok(answerPositions.size >= 3, "expected mixed answer positions");
+  assert.ok(answerPositions.has(0), "expected at least one first-choice answer");
+  assert.ok(answerPositions.has(4), "expected Queens to use the fifth choice");
+});
+
+test("calculateScore: multiple-choice questions score only their answer index", () => {
   QUESTIONS.forEach((q, idx) => {
     if (q.type !== "mc") return;
 
     const correct = [];
-    correct[idx] = 0;
+    correct[idx] = q.answer;
     assert.strictEqual(calculateScore(correct).score, 1, `question ${idx + 1}`);
 
     const wrong = [];
-    wrong[idx] = 1;
+    wrong[idx] = (q.answer + 1) % q.choices.length;
     assert.strictEqual(calculateScore(wrong).score, 0, `question ${idx + 1}`);
   });
 });
