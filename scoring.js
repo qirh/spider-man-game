@@ -243,7 +243,7 @@ const RANKS = [
     blurb: "Better stick to the bus and let the heroes handle it.",
   },
   {
-    min: 130,
+    min: 132,
     title: "FRIENDLY NEIGHBOR",
     blurb: "You know the basics. Spidey would wave.",
   },
@@ -253,7 +253,7 @@ const RANKS = [
     blurb: "Solid spidey-knowledge. J. Jonah would hate to admit it.",
   },
   {
-    min: 146,
+    min: 145,
     title: "TRUE BELIEVER",
     blurb: "Excelsior! You know your Spider-Man!",
   },

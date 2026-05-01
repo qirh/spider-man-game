@@ -18,15 +18,15 @@ const MAX_SCORE = QUESTIONS.reduce(
 
 test("getRank returns CIVILIAN for scores below the FRIENDLY NEIGHBOR threshold", () => {
   assert.strictEqual(getRank(0).title, "CIVILIAN");
-  assert.strictEqual(getRank(129).title, "CIVILIAN");
+  assert.strictEqual(getRank(131).title, "CIVILIAN");
 });
 
 test("getRank advances at every threshold boundary", () => {
-  assert.strictEqual(getRank(130).title, "FRIENDLY NEIGHBOR");
+  assert.strictEqual(getRank(132).title, "FRIENDLY NEIGHBOR");
   assert.strictEqual(getRank(137).title, "FRIENDLY NEIGHBOR");
   assert.strictEqual(getRank(138).title, "WEB SLINGER");
-  assert.strictEqual(getRank(145).title, "WEB SLINGER");
-  assert.strictEqual(getRank(146).title, "TRUE BELIEVER");
+  assert.strictEqual(getRank(144).title, "WEB SLINGER");
+  assert.strictEqual(getRank(145).title, "TRUE BELIEVER");
   assert.strictEqual(getRank(149).title, "TRUE BELIEVER");
   assert.strictEqual(getRank(150).title, "SPIDER-SENSE MASTER");
 });
