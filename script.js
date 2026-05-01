@@ -274,7 +274,7 @@ function getPairs() {
 function renderMatch(screen, q) {
   screen.appendChild(el("div", "q-text", q.prompt));
   screen.appendChild(
-    el("div", "match-help", "Draw a line from each villain to their real name."),
+    el("div", "match-help", q.help || "Draw a line from each item to its match."),
   );
 
   const pairs = getPairs();

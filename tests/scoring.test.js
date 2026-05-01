@@ -117,10 +117,12 @@ test("calculateScore: match round scores per correct pair", () => {
 });
 
 test("calculateScore: total includes every match pair as a separate point", () => {
-  const matchQ = QUESTIONS.find((q) => q.type === "match");
   const mcCount = QUESTIONS.filter((q) => q.type === "mc").length;
   const fillCount = QUESTIONS.filter((q) => q.type === "fill").length;
-  const expected = mcCount + fillCount + matchQ.left.length;
+  const matchTotal = QUESTIONS
+    .filter((q) => q.type === "match")
+    .reduce((total, q) => total + q.left.length, 0);
+  const expected = mcCount + fillCount + matchTotal;
   assert.strictEqual(calculateScore([]).total, expected);
 });
 
@@ -196,11 +198,27 @@ test("odd-one-out villain question points to Lex Luthor", () => {
 });
 
 test("matching villain tiles include image backgrounds", () => {
-  const q = QUESTIONS.find((question) => question.type === "match");
+  const q = QUESTIONS.find((question) =>
+    question.prompt.includes("villain"),
+  );
   assert.ok(q, "expected a matching question");
   q.left.forEach((item) => {
     assert.match(item.imageUrl, /^https:\/\/cdn\.marvel\.com\//);
     assert.ok(item.imagePosition, `${item.label} should set image position`);
     assert.ok(item.imageSize, `${item.label} should set image size`);
   });
+});
+
+test("trip/location matching question maps locations to movies", () => {
+  const q = QUESTIONS.find((question) =>
+    question.prompt.includes("trip/location"),
+  );
+  assert.ok(q, "expected a trip/location matching question");
+  assert.strictEqual(q.left.length, 5);
+  assert.strictEqual(q.right.length, 5);
+  assert.strictEqual(q.pairs.space, "infinity-war");
+  assert.strictEqual(q.pairs.dc, "homecoming");
+  assert.strictEqual(q.pairs.germany, "civil-war");
+  assert.strictEqual(q.pairs.venice, "far-from-home");
+  assert.strictEqual(q.pairs.liberty, "no-way-home");
 });

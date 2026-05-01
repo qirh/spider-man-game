@@ -45,6 +45,7 @@ const QUESTIONS = [
   {
     type: "match",
     prompt: "Match each villain to their real name.",
+    help: "Draw a line from each villain to their real name.",
     left: [
       {
         id: "a",
@@ -82,6 +83,32 @@ const QUESTIONS = [
       { id: "4", label: "Adrian Toomes" },
     ],
     pairs: { a: "2", b: "1", c: "4", d: "3" },
+  },
+  {
+    type: "match",
+    prompt: "Match each trip/location to the movie.",
+    help: "Draw a line from each trip or location to the movie.",
+    left: [
+      { id: "space", label: "Space" },
+      { id: "dc", label: "Washington, D.C." },
+      { id: "germany", label: "Germany" },
+      { id: "venice", label: "Venice, Italy" },
+      { id: "liberty", label: "Statue of Liberty" },
+    ],
+    right: [
+      { id: "civil-war", label: "Captain America: Civil War (2016)" },
+      { id: "far-from-home", label: "Spider-Man: Far From Home (2019)" },
+      { id: "infinity-war", label: "Avengers: Infinity War (2018)" },
+      { id: "no-way-home", label: "Spider-Man: No Way Home (2021)" },
+      { id: "homecoming", label: "Spider-Man: Homecoming (2017)" },
+    ],
+    pairs: {
+      space: "infinity-war",
+      dc: "homecoming",
+      germany: "civil-war",
+      venice: "far-from-home",
+      liberty: "no-way-home",
+    },
   },
   {
     type: "fill",
