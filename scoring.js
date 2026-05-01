@@ -3,24 +3,24 @@ const QUESTIONS = [
     type: "mc",
     prompt: "What is Spider-Man's real name?",
     choices: ["Peter Parker", "Miles Morales", "Lewis Mumford", "Tony Stark"],
-    answer: 0,
+    answer: [0, 1],
   },
   {
     type: "mc",
     prompt: "What bit Peter Parker to give him powers?",
     choices: [
-      "A radioactive spider",
       "A radioactive ant",
+      "A radioactive spider",
       "A magic beetle",
       "A robot bee",
     ],
-    answer: 0,
+    answer: 1,
   },
   {
     type: "mc",
     prompt: "What year did not have a Spider-Man movie come out?",
-    choices: ["2013", "2002", "2012", "2021"],
-    answer: 0,
+    choices: ["2002", "2012", "2013", "2021"],
+    answer: 2,
   },
   {
     type: "mc",
@@ -39,12 +39,14 @@ const QUESTIONS = [
   {
     type: "mc",
     prompt: "What is the name of Peter Parker's high school?",
-    choices: ["Midtown High", "Riverdale High", "Bayside High", "Westview High"],
-    answer: 0,
+    choices: ["Riverdale High", "Midtown High", "Bayside High", "Westview High"],
+    answer: 1,
   },
   {
     type: "match",
     prompt: "Match each villain to their real name.",
+    breakdownLabel: "Villain matching",
+    help: "Draw a line from each villain to their real name.",
     left: [
       {
         id: "a",
@@ -84,6 +86,93 @@ const QUESTIONS = [
     pairs: { a: "2", b: "1", c: "4", d: "3" },
   },
   {
+    type: "match",
+    prompt: "Match each trip/location to the movie.",
+    breakdownLabel: "Trip/location matching",
+    help: "Draw a line from each trip or location to the movie.",
+    left: [
+      {
+        id: "space",
+        label: "Space",
+        imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Hubble_Ultra_Deep_Field_part_d.jpg/960px-Hubble_Ultra_Deep_Field_part_d.jpg",
+        imagePosition: "center",
+        imageSize: "cover",
+      },
+      {
+        id: "dc",
+        label: "Washington, D.C.",
+        imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/White_House_Washington.JPG/960px-White_House_Washington.JPG",
+        imagePosition: "center",
+        imageSize: "cover",
+      },
+      {
+        id: "germany",
+        label: "Germany",
+        imageUrl: "https://upload.wikimedia.org/wikipedia/commons/a/a6/Brandenburger_Tor_abends.jpg",
+        imagePosition: "center",
+        imageSize: "cover",
+      },
+      {
+        id: "venice",
+        label: "Venice, Italy",
+        imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Canal_Grande_Chiesa_della_Salute_e_Dogana_dal_ponte_dell_Accademia.jpg/960px-Canal_Grande_Chiesa_della_Salute_e_Dogana_dal_ponte_dell_Accademia.jpg",
+        imagePosition: "center",
+        imageSize: "cover",
+      },
+      {
+        id: "lic",
+        label: "Long Island City",
+        imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/Long_Island_City_Skyline.jpg/960px-Long_Island_City_Skyline.jpg",
+        imagePosition: "center",
+        imageSize: "cover",
+      },
+    ],
+    right: [
+      {
+        id: "civil-war",
+        label: "Captain America: Civil War",
+        imageUrl: "https://upload.wikimedia.org/wikipedia/en/5/53/Captain_America_Civil_War_poster.jpg",
+        imagePosition: "center top",
+        imageSize: "cover",
+      },
+      {
+        id: "far-from-home",
+        label: "Spider-Man: Far From Home",
+        imageUrl: "https://upload.wikimedia.org/wikipedia/en/b/bd/Spider-Man_Far_From_Home_poster.jpg",
+        imagePosition: "center top",
+        imageSize: "cover",
+      },
+      {
+        id: "infinity-war",
+        label: "Avengers: Infinity War",
+        imageUrl: "https://upload.wikimedia.org/wikipedia/en/4/4d/Avengers_Infinity_War_poster.jpg",
+        imagePosition: "center top",
+        imageSize: "cover",
+      },
+      {
+        id: "no-way-home",
+        label: "Spider-Man: No Way Home",
+        imageUrl: "https://upload.wikimedia.org/wikipedia/en/0/00/Spider-Man_No_Way_Home_poster.jpg",
+        imagePosition: "center top",
+        imageSize: "cover",
+      },
+      {
+        id: "homecoming",
+        label: "Spider-Man: Homecoming",
+        imageUrl: "https://upload.wikimedia.org/wikipedia/en/f/f9/Spider-Man_Homecoming_poster.jpg",
+        imagePosition: "center top",
+        imageSize: "cover",
+      },
+    ],
+    pairs: {
+      space: "infinity-war",
+      dc: "homecoming",
+      germany: "civil-war",
+      venice: "far-from-home",
+      lic: "no-way-home",
+    },
+  },
+  {
     type: "fill",
     prompt: "PETER PARKER'S BELOVED UNCLE WAS NAMED UNCLE _______",
     placeholder: "his first name",
@@ -95,45 +184,116 @@ const QUESTIONS = [
     type: "mc",
     prompt: "Who created Spider-Man?",
     choices: [
-      "Stan Lee & Steve Ditko",
       "Stan Lee & Jack Kirby",
+      "Stan Lee & Steve Ditko",
       "Bob Kane & Bill Finger",
       "Jerry Siegel & Joe Shuster",
     ],
-    answer: 0,
+    answer: 1,
   },
   {
     type: "mc",
-    prompt: "In Into the Spider-Verse, what city does Miles Morales live in?",
-    choices: ["Brooklyn", "Los Angeles", "Queens", "Gotham"],
-    answer: 0,
+    prompt: "Where is Miles Morales from?",
+    choices: ["Los Angeles", "Brooklyn", "Queens", "Gotham"],
+    answer: 1,
   },
   {
     type: "mc",
-    prompt: "What is the best boro in NYC?",
-    choices: ["Queens", "Manhattan", "Brooklyn", "The Bronx", "Staten Island"],
-    answer: 0,
-    requireCorrect: true,
-    wrongMessage: "Wrong answer",
+    prompt: "Where is Peter Parker from?",
+    choices: ["Brooklyn", "Queens", "Manhattan", "Staten Island"],
+    answer: 1,
   },
   {
     type: "mc",
     prompt: "Who said \"I'm something of a scientist myself\"?",
-    choices: ["Norman Osborn", "Otto Octavius", "Peter Parker", "Tony Stark"],
-    answer: 0,
+    choices: ["Otto Octavius", "Peter Parker", "Norman Osborn", "Tony Stark"],
+    answer: 2,
   },
   {
     type: "mc",
     prompt: "Which of these is NOT a Spider-Man villain?",
-    choices: ["Lex Luthor", "Mysterio", "Electro", "Kraven the Hunter"],
-    answer: 0,
+    choices: ["Mysterio", "Electro", "Lex Luthor", "Kraven the Hunter"],
+    answer: 2,
   },
   {
     type: "mc",
     prompt: 'Who is the lead Spider-Man in "Into the Spider-Verse" (2018)?',
-    choices: ["Miles Morales", "Peter Parker", "Ben Reilly", "Gwen Stacy"],
-    answer: 0,
+    choices: ["Peter Parker", "Ben Reilly", "Miles Morales", "Gwen Stacy"],
+    answer: 2,
   },
+  {
+    type: "mc",
+    prompt: "What is the greatest city in the world?",
+    points: 10,
+    choices: [
+      "Rome",
+      "London",
+      "Melbourne",
+      "Cape Town",
+      "Paris",
+      "Tokyo",
+      "Dubai",
+      "Cairo",
+      "Singapore",
+      "Lagos",
+      "New York City",
+    ],
+    answer: 10,
+    requireCorrect: true,
+  },
+  {
+    type: "mc",
+    prompt: "What is the greatest boro in the world?",
+    points: 10,
+    choices: ["Manhattan", "Brooklyn", "The Bronx", "Staten Island", "Queens"],
+    answer: 4,
+    requireCorrect: true,
+  },
+  {
+    type: "mc",
+    prompt: "What is the greatest neighborhood in the world?",
+    points: 10,
+    choices: [
+      "SoHo",
+      "Shibuya",
+      "Montmartre",
+      "Camden",
+      "Le Marais",
+      "Harlem",
+      "Kreuzberg",
+      "Trastevere",
+      "Williamsburg",
+      "Sunnyside",
+    ],
+    answer: 9,
+    requireCorrect: true,
+  },
+  {
+    type: "mc",
+    prompt: "Which boro is better?",
+    points: 100,
+    choices: ["Brooklyn", "Queens"],
+    answer: 1,
+    requireCorrect: true,
+  },
+];
+
+const WRONG_ANSWER_MESSAGES = [
+  "ewwww, no",
+  "of course no",
+  "WRONG",
+  "not even close",
+  "spider-sense says no",
+  "try again",
+  "absolutely not",
+];
+
+const CORRECT_ANSWER_MESSAGES = [
+  "wise choice",
+  "of course",
+  "obviously",
+  "correct energy",
+  "as expected",
 ];
 
 const RANKS = [
@@ -143,22 +303,22 @@ const RANKS = [
     blurb: "Better stick to the bus and let the heroes handle it.",
   },
   {
-    min: 5,
+    min: 132,
     title: "FRIENDLY NEIGHBOR",
     blurb: "You know the basics. Spidey would wave.",
   },
   {
-    min: 8,
+    min: 138,
     title: "WEB SLINGER",
     blurb: "Solid spidey-knowledge. J. Jonah would hate to admit it.",
   },
   {
-    min: 11,
+    min: 145,
     title: "TRUE BELIEVER",
     blurb: "Excelsior! You know your Spider-Man!",
   },
   {
-    min: 14,
+    min: 150,
     title: "SPIDER-SENSE MASTER",
     blurb: "With great trivia comes great responsibility.",
   },
@@ -174,34 +334,41 @@ function getRank(score, ranks = RANKS) {
   return rank;
 }
 
+function questionPoints(q) {
+  if (Number.isFinite(q.points)) return q.points;
+  if (q.type === "match") return q.left.length;
+  return 1;
+}
+
 function calculateScore(answers, questions = QUESTIONS) {
   let score = 0;
   let total = 0;
   const breakdown = [];
 
   questions.forEach((q, i) => {
+    const possible = questionPoints(q);
     if (q.type === "mc") {
-      total += 1;
+      total += possible;
       const accepted = Array.isArray(q.answer) ? q.answer : [q.answer];
       const correct = accepted.includes(answers[i]);
-      if (correct) score += 1;
+      if (correct) score += possible;
       breakdown.push({
         label: shorten(q.prompt),
-        got: correct ? 1 : 0,
-        possible: 1,
+        got: correct ? possible : 0,
+        possible,
       });
     } else if (q.type === "fill") {
-      total += 1;
+      total += possible;
       const ans = (answers[i] || "").trim().toLowerCase();
       const correct = ans === q.answer.toLowerCase();
-      if (correct) score += 1;
+      if (correct) score += possible;
       breakdown.push({
         label: `Fill-in: "${q.answer}"`,
-        got: correct ? 1 : 0,
-        possible: 1,
+        got: correct ? possible : 0,
+        possible,
       });
     } else if (q.type === "match") {
-      total += q.left.length;
+      total += possible;
       const userPairs = answers[i] || {};
       let got = 0;
       Object.keys(q.pairs).forEach((leftId) => {
@@ -209,9 +376,9 @@ function calculateScore(answers, questions = QUESTIONS) {
       });
       score += got;
       breakdown.push({
-        label: "Villain matching",
+        label: q.breakdownLabel || shorten(q.prompt),
         got,
-        possible: q.left.length,
+        possible,
       });
     }
   });
@@ -220,5 +387,14 @@ function calculateScore(answers, questions = QUESTIONS) {
 }
 
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { QUESTIONS, RANKS, calculateScore, getRank, shorten };
+  module.exports = {
+    QUESTIONS,
+    RANKS,
+    CORRECT_ANSWER_MESSAGES,
+    WRONG_ANSWER_MESSAGES,
+    calculateScore,
+    getRank,
+    questionPoints,
+    shorten,
+  };
 }

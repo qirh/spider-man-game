@@ -11,11 +11,30 @@ const state = {
 const focusedFills = new Set();
 const revealedHints = new Set();
 let prevScreenKey = null;
+let introPlayed = false;
+let wrongAnswerMessageIndex = 0;
+let correctAnswerMessageIndex = 0;
+
+// Hydrate from localStorage if a recent in-progress session exists.
+(function hydrate() {
+  const saved = Persistence.load();
+  if (!saved) return;
+  if (saved.screen === "question" && Array.isArray(saved.answers)) {
+    state.screen = saved.screen;
+    state.qIndex = Math.max(0, Math.min(saved.qIndex || 0, QUESTIONS.length - 1));
+    state.answers = saved.answers;
+    (saved.revealedHints || []).forEach((i) => revealedHints.add(i));
+    introPlayed = true;
+  }
+})();
+
+function persist() {
+  Persistence.save(state, revealedHints);
+}
 let activeMatchDrag = null;
 let suppressNextMatchClick = false;
 
 const MATCH_DRAG_THRESHOLD = 6;
-
 const app = document.getElementById("app");
 
 function screenKey() {
@@ -42,6 +61,7 @@ function render() {
 
 function renderWelcome() {
   const screen = el("div", "screen welcome");
+  if (!introPlayed) screen.classList.add("intro");
   screen.innerHTML = `
     <div class="hanging">
       <div class="thread"></div>
@@ -54,15 +74,57 @@ function renderWelcome() {
   btn.addEventListener("click", startQuiz);
   screen.appendChild(btn);
   app.appendChild(screen);
+
+  if (!introPlayed) {
+    introPlayed = true;
+    // Cold page loads are not user-activated in mobile browsers, so the
+    // first intro stays visual-only instead of constructing Web Audio early.
+    playIntro();
+  }
+}
+
+function playIntro() {
+  const overlay = document.createElement("div");
+  overlay.className = "web-crack";
+  overlay.setAttribute("aria-hidden", "true");
+  const radii = [18, 36, 56, 78];
+  const spokes = Array.from({ length: 16 }).map((_, i) => {
+    const a = (i * Math.PI * 2) / 16;
+    const len = 90 + (i % 3) * 4;
+    return `<line x1="0" y1="0" x2="${(Math.cos(a) * len).toFixed(2)}" y2="${(Math.sin(a) * len).toFixed(2)}"/>`;
+  }).join("");
+  const rings = radii.map((r) => {
+    const pts = Array.from({ length: 16 }).map((_, i) => {
+      const a = (i * Math.PI * 2) / 16;
+      const j = i % 2 === 0 ? 0.94 : 1.04;
+      return `${(Math.cos(a) * r * j).toFixed(2)},${(Math.sin(a) * r * j).toFixed(2)}`;
+    });
+    return `<polygon points="${pts.join(" ")}" stroke-opacity="0.7"/>`;
+  }).join("");
+  overlay.innerHTML = `
+    <div class="crack-flash"></div>
+    <svg viewBox="-100 -100 200 200" xmlns="http://www.w3.org/2000/svg">
+      <g fill="none" stroke="white" stroke-width="0.6" stroke-linecap="round" opacity="0.85">
+        ${spokes}
+        ${rings}
+      </g>
+      <circle cx="0" cy="0" r="4" fill="white"/>
+    </svg>
+  `;
+  document.body.appendChild(overlay);
+  setTimeout(() => overlay.remove(), 1200);
 }
 
 function startQuiz() {
   cancelActiveMatchDrag();
+  AudioFx.introBoom();
   state.screen = "question";
   state.qIndex = 0;
   state.answers = [];
   focusedFills.clear();
   revealedHints.clear();
+  Persistence.clear();
+  persist();
   render();
 }
 
@@ -86,6 +148,7 @@ function renderQuestion() {
   const labelText =
     q.label || `QUESTION ${state.qIndex + 1} / ${QUESTIONS.length}`;
   screen.appendChild(el("div", "q-label", labelText));
+  screen.appendChild(renderPointTracker(q));
 
   if (q.type === "mc") renderMC(screen, q);
   else if (q.type === "fill") renderFill(screen, q);
@@ -101,14 +164,25 @@ function renderMC(screen, q) {
   const buttons = [];
   const feedback = el("div", "choice-error");
 
-  function updateNextState() {
+  function updateNextState({
+    rotateWrongMessage = false,
+    rotateCorrectMessage = false,
+  } = {}) {
     const selected = state.answers[state.qIndex];
     const hasAnswer = selected !== undefined;
     const isCorrect = isCorrectChoice(q, selected);
     next.disabled = q.requireCorrect ? !isCorrect : !hasAnswer;
-    feedback.textContent = q.requireCorrect && hasAnswer && !isCorrect
-      ? q.wrongMessage || "Wrong answer"
-      : "";
+
+    if (!q.requireCorrect || !hasAnswer) {
+      setChoiceFeedback(feedback, "");
+    } else if (isCorrect) {
+      const message = rotateCorrectMessage
+        ? nextCorrectAnswerMessage()
+        : currentCorrectAnswerMessage();
+      setChoiceFeedback(feedback, message, { success: true });
+    } else if (rotateWrongMessage || !feedback.textContent) {
+      setChoiceFeedback(feedback, nextWrongAnswerMessage());
+    }
   }
 
   q.choices.forEach((c, i) => {
@@ -120,7 +194,14 @@ function renderMC(screen, q) {
       state.answers[state.qIndex] = i;
       buttons.forEach((b) => b.classList.remove("selected"));
       btn.classList.add("selected");
-      updateNextState();
+      const isRequiredWrong = q.requireCorrect && !isCorrectChoice(q, i);
+      const isRequiredCorrect = q.requireCorrect && isCorrectChoice(q, i);
+      updateNextState({
+        rotateWrongMessage: isRequiredWrong,
+        rotateCorrectMessage: isRequiredCorrect,
+      });
+      updatePointTracker();
+      persist();
     });
     buttons.push(btn);
     choices.appendChild(btn);
@@ -142,6 +223,35 @@ function isCorrectChoice(q, choiceIndex) {
   return accepted.includes(choiceIndex);
 }
 
+function setChoiceFeedback(feedback, message, { success = false } = {}) {
+  feedback.textContent = message;
+  feedback.classList.toggle("success", Boolean(message && success));
+}
+
+function currentCorrectAnswerMessage() {
+  const messages =
+    typeof CORRECT_ANSWER_MESSAGES !== "undefined" && CORRECT_ANSWER_MESSAGES.length
+      ? CORRECT_ANSWER_MESSAGES
+      : ["wise choice"];
+  return messages[correctAnswerMessageIndex % messages.length];
+}
+
+function nextCorrectAnswerMessage() {
+  const message = currentCorrectAnswerMessage();
+  correctAnswerMessageIndex++;
+  return message;
+}
+
+function nextWrongAnswerMessage() {
+  const messages =
+    typeof WRONG_ANSWER_MESSAGES !== "undefined" && WRONG_ANSWER_MESSAGES.length
+      ? WRONG_ANSWER_MESSAGES
+      : ["Wrong answer"];
+  const message = messages[wrongAnswerMessageIndex % messages.length];
+  wrongAnswerMessageIndex++;
+  return message;
+}
+
 function renderFill(screen, q) {
   screen.classList.add("fill-screen");
 
@@ -159,6 +269,8 @@ function renderFill(screen, q) {
   input.addEventListener("input", (e) => {
     state.answers[state.qIndex] = e.target.value;
     next.disabled = !e.target.value.trim();
+    updatePointTracker();
+    persist();
   });
   input.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && (state.answers[state.qIndex] || "").trim()) {
@@ -179,6 +291,7 @@ function renderFill(screen, q) {
         revealedHints.add(state.qIndex);
         wrap.innerHTML = "";
         wrap.appendChild(el("div", "hint-text", `💡 ${q.hint}`));
+        persist();
       });
       wrap.appendChild(hintBtn);
     }
@@ -207,7 +320,7 @@ function getPairs() {
 function renderMatch(screen, q) {
   screen.appendChild(el("div", "q-text", q.prompt));
   screen.appendChild(
-    el("div", "match-help", "Draw a line from each villain to their real name."),
+    el("div", "match-help", q.help || "Draw a line from each item to its match."),
   );
 
   const pairs = getPairs();
@@ -248,7 +361,7 @@ function renderMatch(screen, q) {
   q.right.forEach((item) => {
     const cell = el("button", "match-item");
     cell.dataset.rightId = item.id;
-    cell.appendChild(el("span", null, item.label));
+    renderMatchItemContent(cell, item);
     const matchedLeft = Object.keys(pairs).find((k) => pairs[k] === item.id);
     if (matchedLeft) {
       cell.classList.add("matched");
@@ -308,7 +421,10 @@ function onMatchRightClick(e, id) {
 function nextButton() {
   const isLast = state.qIndex === QUESTIONS.length - 1;
   const btn = el("button", "btn btn-bottom", isLast ? "SEE RESULTS" : "NEXT");
-  btn.addEventListener("click", nextQuestion);
+  btn.addEventListener("click", () => {
+    if (!isLast) AudioFx.advance();
+    nextQuestion();
+  });
   return btn;
 }
 
@@ -317,6 +433,9 @@ function nextQuestion() {
   state.qIndex++;
   if (state.qIndex >= QUESTIONS.length) {
     state.screen = "results";
+    Persistence.clear();
+  } else {
+    persist();
   }
   render();
   scrollToTop();
@@ -326,8 +445,10 @@ function prevQuestion() {
   cancelActiveMatchDrag();
   if (state.qIndex === 0) {
     state.screen = "welcome";
+    Persistence.clear();
   } else {
     state.qIndex--;
+    persist();
   }
   render();
   scrollToTop();
@@ -349,7 +470,7 @@ function prevQuestionFromKeyboard() {
 function nextQuestionFromKeyboard() {
   const q = QUESTIONS[state.qIndex];
   if (!canKeyboardAdvance(q)) {
-    showRequiredChoiceFeedback(q);
+    showRequiredChoiceFeedback();
     return;
   }
 
@@ -360,9 +481,9 @@ function canKeyboardAdvance(q) {
   return !q.requireCorrect || isCorrectChoice(q, state.answers[state.qIndex]);
 }
 
-function showRequiredChoiceFeedback(q) {
+function showRequiredChoiceFeedback() {
   const feedback = document.querySelector(".choice-error");
-  if (feedback) feedback.textContent = q.wrongMessage || "Wrong answer";
+  if (feedback) setChoiceFeedback(feedback, nextWrongAnswerMessage());
 }
 
 function scrollToTop() {
@@ -385,7 +506,7 @@ function renderResults() {
   const ranksList = el("div", "rank-list");
   RANKS.forEach((r, i) => {
     const next = RANKS[i + 1];
-    const range = next ? `${r.min}–${next.min - 1}` : String(r.min);
+    const range = next ? `${r.min}–${next.min - 1}` : `${r.min}–${total}`;
 
     const row = el("div", "rank-row");
     if (score >= r.min) row.classList.add("achieved");
@@ -544,6 +665,42 @@ function setMatchPair(leftId, rightId) {
     if (key !== leftId && pairs[key] === rightId) delete pairs[key];
   });
   pairs[leftId] = rightId;
+  persist();
+}
+
+function renderPointTracker(q) {
+  const tracker = el("div", "point-tracker");
+
+  const current = el("div", "point-stat");
+  current.appendChild(el("span", "point-label", "POINTS"));
+  const currentValue = el("strong", "point-value");
+  currentValue.setAttribute("data-point-current", "true");
+  current.appendChild(currentValue);
+
+  const worth = el("div", "point-stat");
+  worth.appendChild(el("span", "point-label", "THIS QUESTION"));
+  worth.appendChild(
+    el("strong", "point-value", `+${formatPoints(questionPoints(q))}`),
+  );
+
+  tracker.appendChild(current);
+  tracker.appendChild(worth);
+  updatePointTracker(tracker);
+  return tracker;
+}
+
+function updatePointTracker(root = document) {
+  const current = root.querySelector("[data-point-current]");
+  if (!current) return;
+  const completedAnswers = state.answers.slice(0, state.qIndex);
+  const completedQuestions = QUESTIONS.slice(0, state.qIndex);
+  const { score } = calculateScore(completedAnswers, completedQuestions);
+  const { total } = calculateScore([]);
+  current.textContent = `${score} / ${formatPoints(total)}`;
+}
+
+function formatPoints(points) {
+  return `${points} ${points === 1 ? "PT" : "PTS"}`;
 }
 
 function createMatchPreview() {
@@ -804,10 +961,18 @@ window.addEventListener("resize", () => {
   });
 });
 
-document.addEventListener("keydown", (e) => {
-  if (handleArrowNavigation(e)) return;
+function isEditableTarget(target) {
+  if (!target) return false;
+  return (
+    target.tagName === "INPUT" ||
+    target.tagName === "TEXTAREA" ||
+    target.isContentEditable
+  );
+}
 
-  if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+document.addEventListener("keydown", (e) => {
+  if (isEditableTarget(e.target)) return;
+  if (handleArrowNavigation(e)) return;
 
   if (state.screen === "question") {
     const q = QUESTIONS[state.qIndex];
@@ -868,5 +1033,21 @@ function handleArrowNavigation(e) {
   else nextQuestionFromKeyboard();
   return true;
 }
+
+// Mute toggle wiring
+(function setupMute() {
+  const btn = document.getElementById("mute-toggle");
+  if (!btn) return;
+  function sync() {
+    const m = AudioFx.isMuted();
+    btn.textContent = m ? "🔇" : "🔊";
+    btn.classList.toggle("muted", m);
+  }
+  btn.addEventListener("click", () => {
+    AudioFx.setMuted(!AudioFx.isMuted());
+    sync();
+  });
+  sync();
+})();
 
 render();

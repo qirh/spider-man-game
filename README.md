@@ -6,13 +6,13 @@ A mobile-first, single-page Spider-Man trivia game. Vanilla HTML/CSS/JS — no b
 
 ## What's in the game
 
-Fourteen questions across three formats:
+Nineteen questions across three formats:
 
 - **Multiple choice** — pick the right answer from the options (use number keys on desktop; left/right arrows move between questions)
 - **Jeopardy-style fill-in-the-blank** — type the missing word (case-insensitive); some questions have a hint button
-- **Picture matching** — draw a line from each image-backed villain tile to their real name
+- **Picture matching** — draw lines through image-backed villain tiles and movie-location rounds
 
-Max score is 17 — eleven 1-point multiple-choice questions, two 1-point fill-ins, and one matching round worth 4 points. The results screen shows a per-question breakdown plus the full Spider-Man-themed rank ladder from "Civilian" to "Spider-Sense Master," with the rank you earned highlighted.
+Max score is 152 — eleven 1-point multiple-choice questions, three 10-point blocking gates, one 100-point final gate, two 1-point fill-ins, and two matching rounds worth 9 points. The results screen shows a per-question breakdown plus the full Spider-Man-themed rank ladder from "Civilian" to "Spider-Sense Master," with the rank you earned highlighted.
 
 ## Run locally
 
@@ -38,3 +38,8 @@ node --test tests/
 # or
 npm test
 ```
+
+## Audio Credits
+
+- `sfx/thwip.wav`: "Spiderman Thwip" by whiplaff, CC0.
+- `sfx/intro-boom.wav`: "Cinematic Boom Impact Hit 2021" by eminYILDIRIM, CC BY 4.0.
