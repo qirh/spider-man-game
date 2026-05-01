@@ -3,36 +3,40 @@ const assert = require("node:assert");
 const {
   QUESTIONS,
   RANKS,
+  CORRECT_ANSWER_MESSAGES,
   WRONG_ANSWER_MESSAGES,
   calculateScore,
   getRank,
+  questionPoints,
   shorten,
 } = require("../scoring.js");
 
 const MAX_SCORE = QUESTIONS.reduce(
-  (acc, q) => acc + (q.type === "match" ? q.left.length : 1),
+  (acc, q) => acc + questionPoints(q),
   0,
 );
 
 test("getRank returns CIVILIAN for scores below the FRIENDLY NEIGHBOR threshold", () => {
   assert.strictEqual(getRank(0).title, "CIVILIAN");
-  assert.strictEqual(getRank(7).title, "CIVILIAN");
+  assert.strictEqual(getRank(129).title, "CIVILIAN");
 });
 
 test("getRank advances at every threshold boundary", () => {
-  assert.strictEqual(getRank(8).title, "FRIENDLY NEIGHBOR");
-  assert.strictEqual(getRank(12).title, "FRIENDLY NEIGHBOR");
-  assert.strictEqual(getRank(13).title, "WEB SLINGER");
-  assert.strictEqual(getRank(17).title, "WEB SLINGER");
-  assert.strictEqual(getRank(18).title, "TRUE BELIEVER");
-  assert.strictEqual(getRank(21).title, "TRUE BELIEVER");
-  assert.strictEqual(getRank(22).title, "SPIDER-SENSE MASTER");
+  assert.strictEqual(getRank(130).title, "FRIENDLY NEIGHBOR");
+  assert.strictEqual(getRank(137).title, "FRIENDLY NEIGHBOR");
+  assert.strictEqual(getRank(138).title, "WEB SLINGER");
+  assert.strictEqual(getRank(145).title, "WEB SLINGER");
+  assert.strictEqual(getRank(146).title, "TRUE BELIEVER");
+  assert.strictEqual(getRank(149).title, "TRUE BELIEVER");
+  assert.strictEqual(getRank(150).title, "SPIDER-SENSE MASTER");
 });
 
 test("calculateScore: empty answers gives score 0 and full possible total", () => {
   const { score, total } = calculateScore([]);
   assert.strictEqual(score, 0);
   assert.strictEqual(total, MAX_SCORE);
+  assert.strictEqual(total, 152);
+  assert.strictEqual(QUESTIONS.length, 19);
 });
 
 test("multiple-choice questions have valid answer indexes", () => {
@@ -65,7 +69,11 @@ test("calculateScore: multiple-choice questions score only their answer index", 
 
     const correct = [];
     correct[idx] = q.answer;
-    assert.strictEqual(calculateScore(correct).score, 1, `question ${idx + 1}`);
+    assert.strictEqual(
+      calculateScore(correct).score,
+      questionPoints(q),
+      `question ${idx + 1}`,
+    );
 
     const wrong = [];
     wrong[idx] = (q.answer + 1) % q.choices.length;
@@ -117,13 +125,8 @@ test("calculateScore: match round scores per correct pair", () => {
   assert.strictEqual(calculateScore(empty).score, 0);
 });
 
-test("calculateScore: total includes every match pair as a separate point", () => {
-  const mcCount = QUESTIONS.filter((q) => q.type === "mc").length;
-  const fillCount = QUESTIONS.filter((q) => q.type === "fill").length;
-  const matchTotal = QUESTIONS
-    .filter((q) => q.type === "match")
-    .reduce((total, q) => total + q.left.length, 0);
-  const expected = mcCount + fillCount + matchTotal;
+test("calculateScore: total includes weighted question values", () => {
+  const expected = QUESTIONS.reduce((total, q) => total + questionPoints(q), 0);
   assert.strictEqual(calculateScore([]).total, expected);
 });
 
@@ -193,24 +196,27 @@ test("Queens borough question requires Queens before proceeding", () => {
   assert.ok(q.choices.includes("Staten Island"));
 });
 
-test("final three questions are blocking city, borough, and neighborhood gates", () => {
-  const finalThree = QUESTIONS.slice(-3);
+test("final gates are blocking and weighted", () => {
+  const finalGates = QUESTIONS.slice(-4);
   assert.deepStrictEqual(
-    finalThree.map((q) => q.prompt),
+    finalGates.map((q) => q.prompt),
     [
       "What is the greatest city in the world?",
       "What is the greatest boro in the world?",
       "What is the greatest neighborhood in the world?",
+      "Which boro is better?",
     ],
   );
 
   assert.deepStrictEqual(
-    finalThree.map((q) => q.choices[q.answer]),
-    ["New York City", "Queens", "Sunnyside"],
+    finalGates.map((q) => q.choices[q.answer]),
+    ["New York City", "Queens", "Sunnyside", "Queens"],
   );
-  assert.strictEqual(finalThree[2].choices.at(-1), "Sunnyside");
+  assert.deepStrictEqual(finalGates.map(questionPoints), [10, 10, 10, 100]);
+  assert.strictEqual(finalGates[2].choices.at(-1), "Sunnyside");
+  assert.deepStrictEqual(finalGates[3].choices, ["Brooklyn", "Queens"]);
 
-  finalThree.forEach((q) => {
+  finalGates.forEach((q) => {
     assert.strictEqual(q.type, "mc");
     assert.strictEqual(q.requireCorrect, true);
   });
@@ -221,6 +227,12 @@ test("wrong answer messages rotate through a shared message list", () => {
   assert.ok(WRONG_ANSWER_MESSAGES.includes("ewwww, no"));
   assert.ok(WRONG_ANSWER_MESSAGES.includes("of course no"));
   assert.ok(WRONG_ANSWER_MESSAGES.includes("WRONG"));
+});
+
+test("correct answer messages rotate through a shared message list", () => {
+  assert.ok(CORRECT_ANSWER_MESSAGES.length >= 4);
+  assert.ok(CORRECT_ANSWER_MESSAGES.includes("wise choice"));
+  assert.ok(CORRECT_ANSWER_MESSAGES.includes("of course"));
 });
 
 test("quote attribution question points to Norman Osborn", () => {

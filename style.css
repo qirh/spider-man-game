@@ -336,6 +336,43 @@ main {
   margin-bottom: 10px;
 }
 
+.point-tracker {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 18px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.point-stat {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.point-stat:last-child {
+  text-align: right;
+}
+
+.point-label {
+  font-family: "Marvel", "Bangers", cursive;
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: var(--muted);
+}
+
+.point-value {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 13px;
+  color: var(--gold);
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
 .q-text {
   font-size: 22px;
   font-weight: 700;

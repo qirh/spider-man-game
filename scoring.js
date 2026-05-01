@@ -164,6 +164,7 @@ const QUESTIONS = [
   {
     type: "mc",
     prompt: "What is the greatest city in the world?",
+    points: 10,
     choices: [
       "Rome",
       "London",
@@ -183,6 +184,7 @@ const QUESTIONS = [
   {
     type: "mc",
     prompt: "What is the greatest boro in the world?",
+    points: 10,
     choices: ["Manhattan", "Brooklyn", "The Bronx", "Staten Island", "Queens"],
     answer: 4,
     requireCorrect: true,
@@ -190,6 +192,7 @@ const QUESTIONS = [
   {
     type: "mc",
     prompt: "What is the greatest neighborhood in the world?",
+    points: 10,
     choices: [
       "SoHo",
       "Shibuya",
@@ -205,6 +208,14 @@ const QUESTIONS = [
     answer: 9,
     requireCorrect: true,
   },
+  {
+    type: "mc",
+    prompt: "Which boro is better?",
+    points: 100,
+    choices: ["Brooklyn", "Queens"],
+    answer: 1,
+    requireCorrect: true,
+  },
 ];
 
 const WRONG_ANSWER_MESSAGES = [
@@ -217,6 +228,14 @@ const WRONG_ANSWER_MESSAGES = [
   "absolutely not",
 ];
 
+const CORRECT_ANSWER_MESSAGES = [
+  "wise choice",
+  "of course",
+  "obviously",
+  "correct energy",
+  "as expected",
+];
+
 const RANKS = [
   {
     min: 0,
@@ -224,22 +243,22 @@ const RANKS = [
     blurb: "Better stick to the bus and let the heroes handle it.",
   },
   {
-    min: 8,
+    min: 130,
     title: "FRIENDLY NEIGHBOR",
     blurb: "You know the basics. Spidey would wave.",
   },
   {
-    min: 13,
+    min: 138,
     title: "WEB SLINGER",
     blurb: "Solid spidey-knowledge. J. Jonah would hate to admit it.",
   },
   {
-    min: 18,
+    min: 146,
     title: "TRUE BELIEVER",
     blurb: "Excelsior! You know your Spider-Man!",
   },
   {
-    min: 22,
+    min: 150,
     title: "SPIDER-SENSE MASTER",
     blurb: "With great trivia comes great responsibility.",
   },
@@ -255,34 +274,41 @@ function getRank(score, ranks = RANKS) {
   return rank;
 }
 
+function questionPoints(q) {
+  if (Number.isFinite(q.points)) return q.points;
+  if (q.type === "match") return q.left.length;
+  return 1;
+}
+
 function calculateScore(answers, questions = QUESTIONS) {
   let score = 0;
   let total = 0;
   const breakdown = [];
 
   questions.forEach((q, i) => {
+    const possible = questionPoints(q);
     if (q.type === "mc") {
-      total += 1;
+      total += possible;
       const accepted = Array.isArray(q.answer) ? q.answer : [q.answer];
       const correct = accepted.includes(answers[i]);
-      if (correct) score += 1;
+      if (correct) score += possible;
       breakdown.push({
         label: shorten(q.prompt),
-        got: correct ? 1 : 0,
-        possible: 1,
+        got: correct ? possible : 0,
+        possible,
       });
     } else if (q.type === "fill") {
-      total += 1;
+      total += possible;
       const ans = (answers[i] || "").trim().toLowerCase();
       const correct = ans === q.answer.toLowerCase();
-      if (correct) score += 1;
+      if (correct) score += possible;
       breakdown.push({
         label: `Fill-in: "${q.answer}"`,
-        got: correct ? 1 : 0,
-        possible: 1,
+        got: correct ? possible : 0,
+        possible,
       });
     } else if (q.type === "match") {
-      total += q.left.length;
+      total += possible;
       const userPairs = answers[i] || {};
       let got = 0;
       Object.keys(q.pairs).forEach((leftId) => {
@@ -292,7 +318,7 @@ function calculateScore(answers, questions = QUESTIONS) {
       breakdown.push({
         label: q.breakdownLabel || shorten(q.prompt),
         got,
-        possible: q.left.length,
+        possible,
       });
     }
   });
@@ -304,9 +330,11 @@ if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     QUESTIONS,
     RANKS,
+    CORRECT_ANSWER_MESSAGES,
     WRONG_ANSWER_MESSAGES,
     calculateScore,
     getRank,
+    questionPoints,
     shorten,
   };
 }

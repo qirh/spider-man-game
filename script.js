@@ -13,6 +13,7 @@ const revealedHints = new Set();
 let prevScreenKey = null;
 let introPlayed = false;
 let wrongAnswerMessageIndex = 0;
+let correctAnswerMessageIndex = 0;
 
 // Hydrate from localStorage if a recent in-progress session exists.
 (function hydrate() {
@@ -34,8 +35,6 @@ let activeMatchDrag = null;
 let suppressNextMatchClick = false;
 
 const MATCH_DRAG_THRESHOLD = 6;
-const CORRECT_REQUIRED_MESSAGE = "GREAT CHOICE";
-
 const app = document.getElementById("app");
 
 function screenKey() {
@@ -153,6 +152,7 @@ function renderQuestion() {
   const labelText =
     q.label || `QUESTION ${state.qIndex + 1} / ${QUESTIONS.length}`;
   screen.appendChild(el("div", "q-label", labelText));
+  screen.appendChild(renderPointTracker(q));
 
   if (q.type === "mc") renderMC(screen, q);
   else if (q.type === "fill") renderFill(screen, q);
@@ -168,7 +168,10 @@ function renderMC(screen, q) {
   const buttons = [];
   const feedback = el("div", "choice-error");
 
-  function updateNextState({ rotateWrongMessage = false } = {}) {
+  function updateNextState({
+    rotateWrongMessage = false,
+    rotateCorrectMessage = false,
+  } = {}) {
     const selected = state.answers[state.qIndex];
     const hasAnswer = selected !== undefined;
     const isCorrect = isCorrectChoice(q, selected);
@@ -177,7 +180,10 @@ function renderMC(screen, q) {
     if (!q.requireCorrect || !hasAnswer) {
       setChoiceFeedback(feedback, "");
     } else if (isCorrect) {
-      setChoiceFeedback(feedback, CORRECT_REQUIRED_MESSAGE, { success: true });
+      const message = rotateCorrectMessage
+        ? nextCorrectAnswerMessage()
+        : currentCorrectAnswerMessage();
+      setChoiceFeedback(feedback, message, { success: true });
     } else if (rotateWrongMessage || !feedback.textContent) {
       setChoiceFeedback(feedback, nextWrongAnswerMessage());
     }
@@ -193,7 +199,12 @@ function renderMC(screen, q) {
       buttons.forEach((b) => b.classList.remove("selected"));
       btn.classList.add("selected");
       const isRequiredWrong = q.requireCorrect && !isCorrectChoice(q, i);
-      updateNextState({ rotateWrongMessage: isRequiredWrong });
+      const isRequiredCorrect = q.requireCorrect && isCorrectChoice(q, i);
+      updateNextState({
+        rotateWrongMessage: isRequiredWrong,
+        rotateCorrectMessage: isRequiredCorrect,
+      });
+      updatePointTracker();
       if (isRequiredWrong) AudioFx.wrong();
       else AudioFx.click();
       persist();
@@ -223,6 +234,20 @@ function setChoiceFeedback(feedback, message, { success = false } = {}) {
   feedback.classList.toggle("success", Boolean(message && success));
 }
 
+function currentCorrectAnswerMessage() {
+  const messages =
+    typeof CORRECT_ANSWER_MESSAGES !== "undefined" && CORRECT_ANSWER_MESSAGES.length
+      ? CORRECT_ANSWER_MESSAGES
+      : ["wise choice"];
+  return messages[correctAnswerMessageIndex % messages.length];
+}
+
+function nextCorrectAnswerMessage() {
+  const message = currentCorrectAnswerMessage();
+  correctAnswerMessageIndex++;
+  return message;
+}
+
 function nextWrongAnswerMessage() {
   const messages =
     typeof WRONG_ANSWER_MESSAGES !== "undefined" && WRONG_ANSWER_MESSAGES.length
@@ -250,6 +275,7 @@ function renderFill(screen, q) {
   input.addEventListener("input", (e) => {
     state.answers[state.qIndex] = e.target.value;
     next.disabled = !e.target.value.trim();
+    updatePointTracker();
     persist();
   });
   input.addEventListener("keydown", (e) => {
@@ -487,7 +513,7 @@ function renderResults() {
   const ranksList = el("div", "rank-list");
   RANKS.forEach((r, i) => {
     const next = RANKS[i + 1];
-    const range = next ? `${r.min}–${next.min - 1}` : String(r.min);
+    const range = next ? `${r.min}–${next.min - 1}` : `${r.min}–${total}`;
 
     const row = el("div", "rank-row");
     if (score >= r.min) row.classList.add("achieved");
@@ -648,6 +674,38 @@ function setMatchPair(leftId, rightId) {
   pairs[leftId] = rightId;
   AudioFx.match();
   persist();
+}
+
+function renderPointTracker(q) {
+  const tracker = el("div", "point-tracker");
+
+  const current = el("div", "point-stat");
+  current.appendChild(el("span", "point-label", "POINTS"));
+  const currentValue = el("strong", "point-value");
+  currentValue.setAttribute("data-point-current", "true");
+  current.appendChild(currentValue);
+
+  const worth = el("div", "point-stat");
+  worth.appendChild(el("span", "point-label", "THIS QUESTION"));
+  worth.appendChild(
+    el("strong", "point-value", `+${formatPoints(questionPoints(q))}`),
+  );
+
+  tracker.appendChild(current);
+  tracker.appendChild(worth);
+  updatePointTracker(tracker);
+  return tracker;
+}
+
+function updatePointTracker(root = document) {
+  const current = root.querySelector("[data-point-current]");
+  if (!current) return;
+  const { score, total } = calculateScore(state.answers);
+  current.textContent = `${score} / ${formatPoints(total)}`;
+}
+
+function formatPoints(points) {
+  return `${points} ${points === 1 ? "PT" : "PTS"}`;
 }
 
 function createMatchPreview() {
