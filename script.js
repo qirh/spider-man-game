@@ -368,7 +368,7 @@ function renderMatch(screen, q) {
   q.right.forEach((item) => {
     const cell = el("button", "match-item");
     cell.dataset.rightId = item.id;
-    cell.appendChild(el("span", null, item.label));
+    renderMatchItemContent(cell, item);
     const matchedLeft = Object.keys(pairs).find((k) => pairs[k] === item.id);
     if (matchedLeft) {
       cell.classList.add("matched");

@@ -310,6 +310,17 @@ test("trip/location matching question maps locations to movies", () => {
   assert.ok(q, "expected a trip/location matching question");
   assert.strictEqual(q.left.length, 5);
   assert.strictEqual(q.right.length, 5);
+  q.left.forEach((item) => {
+    assert.match(item.imageUrl, /^https:\/\/upload\.wikimedia\.org\//);
+    assert.ok(item.imagePosition, `${item.label} should set image position`);
+    assert.ok(item.imageSize, `${item.label} should set image size`);
+  });
+  q.right.forEach((item) => {
+    assert.match(item.imageUrl, /^https:\/\/upload\.wikimedia\.org\//);
+    assert.doesNotMatch(item.label, /\(\d{4}\)/);
+    assert.ok(item.imagePosition, `${item.label} should set image position`);
+    assert.ok(item.imageSize, `${item.label} should set image size`);
+  });
   assert.strictEqual(q.pairs.space, "infinity-war");
   assert.strictEqual(q.pairs.dc, "homecoming");
   assert.strictEqual(q.pairs.germany, "civil-war");

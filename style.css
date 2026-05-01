@@ -399,7 +399,7 @@ main {
   border-radius: 12px;
   text-align: left;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  transition: background-color 0.15s, border-color 0.15s, transform 0.1s;
   -webkit-tap-highlight-color: transparent;
   display: flex;
   align-items: center;
@@ -717,7 +717,7 @@ main {
 
 .match-item.drawing-source,
 .match-item.drop-target {
-  background: var(--spider-red);
+  background-color: var(--spider-red);
   border-color: var(--spider-white);
 }
 
@@ -734,7 +734,7 @@ main {
 }
 
 .match-item.matched {
-  background: rgba(245, 197, 24, 0.12);
+  background-color: rgba(245, 197, 24, 0.12);
   border-color: var(--gold);
   color: var(--gold);
 }
