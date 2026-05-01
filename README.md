@@ -29,6 +29,15 @@ python3 -m http.server 5555
 # then visit http://<your-mac-ip>:5555/ on your phone
 ```
 
+## Deployment & PR previews
+
+The live site at https://qirh.github.io/spider-man-game/ is served from the `gh-pages` branch. Two workflows keep it in sync:
+
+- **`.github/workflows/deploy.yml`** — on every push to `main`, mirrors the repo (excluding tests, workflows, and package metadata) to `gh-pages`.
+- **`.github/workflows/pr-preview.yml`** — on every PR open/update, publishes a preview to `gh-pages/pr-preview/pr-<number>/` and comments the URL on the PR. The preview is deleted automatically when the PR is closed or merged.
+
+**One-time setup (after merging this PR):** in **Settings → Pages**, change the source from `main` to `gh-pages` (root). Until you do, the workflows will populate `gh-pages` but the live site will keep serving from `main`.
+
 ## Tests
 
 The pure scoring logic (questions, ranks, score calculation) lives in `scoring.js` so it can run in both the browser and Node. Tests use Node's built-in test runner — no install needed:

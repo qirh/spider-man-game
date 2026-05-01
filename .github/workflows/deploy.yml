@@ -1,0 +1,50 @@
+name: Deploy main to gh-pages
+
+# Mirrors the contents of `main` to the `gh-pages` branch so that
+# GitHub Pages (set to serve from `gh-pages`) stays in sync with main.
+# PR previews are added/removed alongside it under /pr-preview/pr-N/
+# by .github/workflows/pr-preview.yml.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: gh-pages-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+
+      - name: Stage site (exclude repo metadata)
+        run: |
+          mkdir -p _site
+          rsync -a --delete \
+            --exclude '.git' \
+            --exclude '.github' \
+            --exclude 'tests' \
+            --exclude 'node_modules' \
+            --exclude 'package.json' \
+            --exclude 'package-lock.json' \
+            --exclude '_site' \
+            ./ _site/
+
+      - name: Publish to gh-pages (preserving /pr-preview)
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./_site
+          publish_branch: gh-pages
+          keep_files: true
+          # `keep_files: true` preserves /pr-preview/* on gh-pages so
+          # open PR previews aren't wiped when main is republished.
+          # The pr-preview action handles its own cleanup on PR close.
+          commit_message: "Deploy ${{ github.sha }} from main"
