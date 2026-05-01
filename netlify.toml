@@ -1,0 +1,28 @@
+# Netlify configuration for the Spider-Man Sunnyside Challenge.
+# Static site, no build step. Netlify auto-creates a Deploy Preview
+# for every pull request and comments the URL on the PR.
+
+[build]
+  publish = "."
+  command = ""
+  # No build step — vanilla HTML/CSS/JS served from the repo root.
+
+[build.processing]
+  skip_processing = true
+
+# Don't ship test files or package metadata to the deployed site.
+# (They'd be harmless but they're noise.)
+[[redirects]]
+  from = "/tests/*"
+  to   = "/404.html"
+  status = 404
+
+[[redirects]]
+  from = "/package.json"
+  to   = "/404.html"
+  status = 404
+
+[[redirects]]
+  from = "/package-lock.json"
+  to   = "/404.html"
+  status = 404

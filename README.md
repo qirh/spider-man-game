@@ -31,12 +31,12 @@ python3 -m http.server 5555
 
 ## Deployment & PR previews
 
-The live site at https://qirh.github.io/spider-man-game/ is served from the `gh-pages` branch. Two workflows keep it in sync:
+Deploys are handled by Netlify (configured via `netlify.toml`):
 
-- **`.github/workflows/deploy.yml`** — on every push to `main`, mirrors the repo (excluding tests, workflows, and package metadata) to `gh-pages`.
-- **`.github/workflows/pr-preview.yml`** — on every PR open/update, publishes a preview to `gh-pages/pr-preview/pr-<number>/` and comments the URL on the PR. The preview is deleted automatically when the PR is closed or merged.
+- Every push to `main` triggers a production deploy.
+- Every pull request gets an automatic Deploy Preview at a unique URL, posted as a comment on the PR.
 
-**One-time setup (after merging this PR):** in **Settings → Pages**, change the source from `main` to `gh-pages` (root). Until you do, the workflows will populate `gh-pages` but the live site will keep serving from `main`.
+No build step — Netlify publishes the repo root as a static site, excluding `tests/` and the package metadata via `netlify.toml`.
 
 ## Tests
 
