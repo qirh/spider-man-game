@@ -93,7 +93,7 @@ const QUESTIONS = [
       { id: "dc", label: "Washington, D.C." },
       { id: "germany", label: "Germany" },
       { id: "venice", label: "Venice, Italy" },
-      { id: "liberty", label: "Statue of Liberty" },
+      { id: "lic", label: "Long Island City" },
     ],
     right: [
       { id: "civil-war", label: "Captain America: Civil War (2016)" },
@@ -107,7 +107,7 @@ const QUESTIONS = [
       dc: "homecoming",
       germany: "civil-war",
       venice: "far-from-home",
-      liberty: "no-way-home",
+      lic: "no-way-home",
     },
   },
   {

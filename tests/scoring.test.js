@@ -261,5 +261,6 @@ test("trip/location matching question maps locations to movies", () => {
   assert.strictEqual(q.pairs.dc, "homecoming");
   assert.strictEqual(q.pairs.germany, "civil-war");
   assert.strictEqual(q.pairs.venice, "far-from-home");
-  assert.strictEqual(q.pairs.liberty, "no-way-home");
+  assert.ok(q.left.some((item) => item.label === "Long Island City"));
+  assert.strictEqual(q.pairs.lic, "no-way-home");
 });
