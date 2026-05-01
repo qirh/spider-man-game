@@ -121,7 +121,6 @@ function playIntro({ withSound = false } = {}) {
 
 function startQuiz() {
   cancelActiveMatchDrag();
-  AudioFx.advance();
   state.screen = "question";
   state.qIndex = 0;
   state.answers = [];
@@ -428,7 +427,10 @@ function onMatchRightClick(e, id) {
 function nextButton() {
   const isLast = state.qIndex === QUESTIONS.length - 1;
   const btn = el("button", "btn btn-bottom", isLast ? "SEE RESULTS" : "NEXT");
-  btn.addEventListener("click", nextQuestion);
+  btn.addEventListener("click", () => {
+    if (!isLast) AudioFx.advance();
+    nextQuestion();
+  });
   return btn;
 }
 
@@ -440,7 +442,6 @@ function nextQuestion() {
     Persistence.clear();
     AudioFx.fanfare();
   } else {
-    AudioFx.advance();
     persist();
   }
   render();
