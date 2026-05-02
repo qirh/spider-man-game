@@ -1,0 +1,4 @@
+User-agent: *
+Disallow:
+
+Sitemap: https://qirh.github.io/spider-man-game/sitemap.xml
