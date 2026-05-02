@@ -35,8 +35,8 @@ test("calculateScore: empty answers gives score 0 and full possible total", () =
   const { score, total } = calculateScore([]);
   assert.strictEqual(score, 0);
   assert.strictEqual(total, MAX_SCORE);
-  assert.strictEqual(total, 152);
-  assert.strictEqual(QUESTIONS.length, 19);
+  assert.strictEqual(total, 452);
+  assert.strictEqual(QUESTIONS.length, 22);
 });
 
 test("multiple-choice questions have valid answer indexes", () => {
@@ -225,7 +225,7 @@ test("Queens borough question requires Queens before proceeding", () => {
 });
 
 test("final gates are blocking and weighted", () => {
-  const finalGates = QUESTIONS.slice(-4);
+  const finalGates = QUESTIONS.slice(-7);
   assert.deepStrictEqual(
     finalGates.map((q) => q.prompt),
     [
@@ -233,16 +233,25 @@ test("final gates are blocking and weighted", () => {
       "What is the greatest boro in the world?",
       "What is the greatest neighborhood in the world?",
       "Which boro is better?",
+      "Which boro is better?",
+      "Which boro is better?",
+      "Which boro is better?",
     ],
   );
 
   assert.deepStrictEqual(
     finalGates.map((q) => q.choices[q.answer]),
-    ["New York City", "Queens", "Sunnyside", "Queens"],
+    ["New York City", "Queens", "Sunnyside", "Queens", "Queens", "Queens", "Queens"],
   );
-  assert.deepStrictEqual(finalGates.map(questionPoints), [10, 10, 10, 100]);
+  assert.deepStrictEqual(
+    finalGates.map(questionPoints),
+    [10, 10, 10, 100, 100, 100, 100],
+  );
   assert.strictEqual(finalGates[2].choices.at(-1), "Sunnyside");
   assert.deepStrictEqual(finalGates[3].choices, ["Brooklyn", "Queens"]);
+  assert.deepStrictEqual(finalGates[4].choices, ["Manhattan", "Queens"]);
+  assert.deepStrictEqual(finalGates[5].choices, ["Staten Island", "Queens"]);
+  assert.deepStrictEqual(finalGates[6].choices, ["The Bronx", "Queens"]);
 
   finalGates.forEach((q) => {
     assert.strictEqual(q.type, "mc");
