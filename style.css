@@ -167,6 +167,51 @@ main {
   filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.6));
 }
 
+.spider-pixel {
+  width: 92px;
+  font-size: 0;
+  margin-top: -2px;
+  display: block;
+}
+
+.spider-pixel svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.spider-swing {
+  position: fixed;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  z-index: 5;
+  transform-origin: 50% 0;
+  will-change: transform;
+}
+
+.spider-swing-thread {
+  width: 1.5px;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.55) 30%,
+    rgba(255, 255, 255, 0.85) 100%
+  );
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.45);
+}
+
+.spider-swing-body {
+  line-height: 1;
+  margin-top: -2px;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.55));
+}
+
 @keyframes dangle {
   0%,
   100% {
@@ -440,19 +485,51 @@ main {
   flex: 1;
 }
 
-.choice-error {
-  min-height: 20px;
-  margin: -10px 0 18px;
+.feedback-splash {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.6);
+  padding: 22px 34px;
+  border-radius: 18px;
+  background: rgba(12, 14, 40, 0.92);
+  border: 3px solid var(--spider-red);
   color: var(--spider-red);
-  font-family: "Inter", sans-serif;
-  font-size: 14px;
-  font-weight: 700;
+  font-family: "Bangers", "Impact", sans-serif;
+  font-size: clamp(34px, 9vw, 64px);
+  letter-spacing: 2px;
   text-align: center;
+  text-transform: uppercase;
+  white-space: nowrap;
+  max-width: 92vw;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 1000;
+  box-shadow:
+    0 0 40px rgba(226, 53, 49, 0.45),
+    0 14px 40px rgba(0, 0, 0, 0.55);
+  text-shadow: 0 0 14px rgba(226, 53, 49, 0.6);
+  transition: opacity 0.18s ease-out, transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.choice-error.success {
+.feedback-splash.show {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.feedback-splash.leave {
+  opacity: 0;
+  transform: translate(-50%, -55%) scale(0.92);
+  transition: opacity 0.3s ease-in, transform 0.3s ease-in;
+}
+
+.feedback-splash.success {
+  border-color: var(--gold);
   color: var(--gold);
-  text-shadow: 0 0 10px rgba(245, 197, 24, 0.35);
+  box-shadow:
+    0 0 40px rgba(245, 197, 24, 0.5),
+    0 14px 40px rgba(0, 0, 0, 0.55);
+  text-shadow: 0 0 14px rgba(245, 197, 24, 0.65);
 }
 
 /* ---------- Fill-in-the-blank (Jeopardy) ---------- */
@@ -553,7 +630,14 @@ main {
   gap: 28px 56px;
   margin-bottom: 18px;
   position: relative;
+  touch-action: pan-y;
+}
+
+body.match-dragging,
+body.match-dragging .match-grid,
+body.match-dragging .match-item {
   touch-action: none;
+  overscroll-behavior: contain;
 }
 
 .match-lines {
@@ -662,7 +746,7 @@ main {
   gap: 4px;
   transition: background 0.15s, border-color 0.15s, transform 0.1s;
   -webkit-tap-highlight-color: transparent;
-  touch-action: none;
+  touch-action: pan-y;
 }
 
 .match-item:active {
