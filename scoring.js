@@ -276,6 +276,30 @@ const QUESTIONS = [
     answer: 1,
     requireCorrect: true,
   },
+  {
+    type: "mc",
+    prompt: "Which boro is better?",
+    points: 100,
+    choices: ["Manhattan", "Queens"],
+    answer: 1,
+    requireCorrect: true,
+  },
+  {
+    type: "mc",
+    prompt: "Which boro is better?",
+    points: 100,
+    choices: ["Staten Island", "Queens"],
+    answer: 1,
+    requireCorrect: true,
+  },
+  {
+    type: "mc",
+    prompt: "Which boro is better?",
+    points: 100,
+    choices: ["The Bronx", "Queens"],
+    answer: 1,
+    requireCorrect: true,
+  },
 ];
 
 const WRONG_ANSWER_MESSAGES = [
