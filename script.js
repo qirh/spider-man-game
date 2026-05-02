@@ -48,6 +48,7 @@ function render() {
   const isTransition = key !== prevScreenKey;
   prevScreenKey = key;
 
+  if (isTransition) clearFeedbackSplash();
   app.innerHTML = "";
   if (state.screen === "welcome") renderWelcome();
   else if (state.screen === "question") renderQuestion();
@@ -59,13 +60,85 @@ function render() {
   }
 }
 
+const SPIDERMAN_PIXEL_ART = `
+✨✨✨✨✨✨✨✨✨⬜✨✨✨✨✨✨✨✨✨
+✨✨✨✨✨✨✨✨✨⬜✨✨✨✨✨✨✨✨✨
+✨✨✨✨✨✨✨✨✨⬜✨✨✨✨✨✨✨✨✨
+✨✨✨✨✨✨✨✨✨⬜✨✨✨✨✨✨✨✨✨
+✨✨✨✨✨✨✨⬛⬛⬜⬛⬛✨✨✨✨✨✨✨
+✨✨✨✨✨✨✨⬛🟥⬜🟥⬛✨✨✨✨✨✨✨
+✨✨✨✨✨✨⬛🟥🟥⬜🟥🟥⬛✨✨✨✨✨✨
+✨✨✨⬛⬛⬛🟥🟥🟥⬜🟥🟥🟥⬛⬛⬛✨✨✨
+✨⬛⬛🟦🟦🟦🟦🟥🟥⬜🟥🟥🟦🟦🟦🟦⬛⬛✨
+⬛🟦🟦🟦🟦🟦🟦⬛⬛⬜⬛⬛🟦🟦🟦🟦🟦🟦⬛
+⬛🟦🟦🟦🟦🟦⬛✨✨⬜✨✨⬛🟦🟦🟦🟦🟦⬛
+✨⬛🟦🟦🟦🟦🟦⬛⬛⬜⬛⬛🟦🟦🟦🟦🟦⬛✨
+✨✨⬛🟦🟦🟦🟦🟦🟦⬜🟦🟦🟦🟦🟦🟦⬛✨✨
+✨✨✨⬛🟦🟦🟦🟦🟦⬜🟦🟦🟦🟦🟦⬛✨✨✨
+✨✨✨✨⬛⬛⬛⬛⬛⬜⬛⬛⬛⬛⬛✨✨✨✨
+✨✨✨✨⬛🟥🟥🟥⬛⬜⬛🟥🟥🟥⬛✨✨✨✨
+✨✨✨⬛🟥🟥🟥🟥⬛🟥⬛🟥🟥🟥🟥⬛✨✨✨
+✨✨⬛🟥🟥🟥🟥🟥⬛🟥⬛🟥🟥🟥🟥🟥⬛✨✨
+✨✨⬛🟥🟥🟥⬛⬛🟥🟥🟥⬛⬛🟥🟥🟥⬛✨✨
+✨⬛🟥🟥🟦⬛🟦🟥🟥🟥🟥🟥🟦⬛🟦🟥🟥⬛✨
+⬛🟥🟥🟦⬛🟦🟥⬛⬛⬛⬛⬛🟥🟦⬛🟦🟥🟥⬛
+⬛🟥🟦⬛🟥🟥⬛🟥🟥🟥🟥🟥⬛🟥🟥⬛🟦🟥⬛
+⬛🟥⬛🟥🟥⬛🟥🟥🟥🟥🟥🟥🟥⬛🟥🟥⬛🟥⬛
+⬛🟥⬛🟥⬛🟥🟥🟥🟥🟥🟥🟥🟥🟥⬛🟥⬛🟥⬛
+✨⬛⬛⬛⬛🟥🟥🟥🟥🟥🟥🟥🟥🟥⬛⬛⬛⬛✨
+✨✨✨✨⬛🟥🟥⬛⬛🟥⬛⬛🟥🟥⬛✨✨✨✨
+✨✨✨✨⬛🟥⬛⬜⬛🟥⬛⬜⬛🟥⬛✨✨✨✨
+✨✨✨✨⬛🟥⬛⬜⬛🟥⬛⬜⬛🟥⬛✨✨✨✨
+✨✨✨✨⬛🟥⬛⬛⬛🟥⬛⬛⬛🟥⬛✨✨✨✨
+✨✨✨✨⬛🟥⬛🟥🟥🟥🟥🟥⬛🟥⬛✨✨✨✨
+✨✨✨✨⬛🟥🟥🟥🟥🟥🟥🟥🟥🟥⬛✨✨✨✨
+✨✨✨✨✨⬛🟥🟥🟥🟥🟥🟥🟥⬛✨✨✨✨✨
+✨✨✨✨✨✨⬛⬛🟥🟥🟥⬛⬛✨✨✨✨✨✨
+✨✨✨✨✨✨✨✨⬛⬛⬛✨✨✨✨✨✨✨✨
+`;
+
+const SPIDERMAN_PIXEL_COLORS = {
+  "⬛": "#0A0A0A",
+  "🟥": "#E23531",
+  "🟦": "#2A4FB0",
+  "⬜": "#FFFFFF",
+};
+
+let spidermanPixelSvgCache = null;
+
+function buildSpidermanPixelSvg() {
+  if (spidermanPixelSvgCache) return spidermanPixelSvgCache;
+  const rows = SPIDERMAN_PIXEL_ART.split("\n")
+    .map((line) => Array.from(line.replace(/[︎️]/g, "").trim()))
+    .filter((row) => row.length > 0);
+
+  // The art prefixes the figure with a few thread-only rows; the .thread div
+  // already supplies a long hanging thread, so crop everything above the first
+  // row that contains an outline pixel.
+  const firstFigureRow = rows.findIndex((row) => row.includes("⬛"));
+  const cropped = firstFigureRow > 0 ? rows.slice(firstFigureRow) : rows;
+  const h = cropped.length;
+  const w = cropped[0].length;
+
+  const rects = [];
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const fill = SPIDERMAN_PIXEL_COLORS[cropped[y][x]];
+      if (!fill) continue;
+      rects.push(`<rect x="${x}" y="${y}" width="1.02" height="1.02" fill="${fill}"/>`);
+    }
+  }
+  spidermanPixelSvgCache = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet" shape-rendering="crispEdges" aria-hidden="true">${rects.join("")}</svg>`;
+  return spidermanPixelSvgCache;
+}
+
 function renderWelcome() {
   const screen = el("div", "screen welcome");
   if (!introPlayed) screen.classList.add("intro");
   screen.innerHTML = `
     <div class="hanging">
       <div class="thread"></div>
-      <div class="spider">🕷️</div>
+      <div class="spider spider-pixel">${buildSpidermanPixelSvg()}</div>
     </div>
     <h1 class="title">SPIDER-MAN<br/>SUNNYSIDE<br/>CHALLENGE</h1>
     <p class="tagline">Test your spidey-sense</p>
@@ -81,6 +154,73 @@ function renderWelcome() {
     // first intro stays visual-only instead of constructing Web Audio early.
     playIntro();
   }
+}
+
+let spiderTeaserTimer = null;
+
+function startSpiderTeasers() {
+  stopSpiderTeasers();
+  scheduleNextSpiderTeaser(2000 + Math.random() * 2500);
+}
+
+function stopSpiderTeasers() {
+  if (spiderTeaserTimer) {
+    clearTimeout(spiderTeaserTimer);
+    spiderTeaserTimer = null;
+  }
+  document.querySelectorAll(".spider-swing").forEach((node) => node.remove());
+}
+
+function scheduleNextSpiderTeaser(delay = 5000 + Math.random() * 5000) {
+  spiderTeaserTimer = setTimeout(() => {
+    spiderTeaserTimer = null;
+    spawnSwingingSpider();
+    scheduleNextSpiderTeaser();
+  }, delay);
+}
+
+function spawnSwingingSpider() {
+  const root = document.createElement("div");
+  root.className = "spider-swing";
+  root.setAttribute("aria-hidden", "true");
+
+  const goRight = Math.random() < 0.5;
+  const topPct = 2 + Math.random() * 78;
+  const threadLen = 30 + Math.random() * 220;
+  const duration = 2200 + Math.random() * 2200;
+  const fontSize = 22 + Math.random() * 22;
+
+  const thread = document.createElement("div");
+  thread.className = "spider-swing-thread";
+  thread.style.height = `${threadLen}px`;
+
+  const body = document.createElement("div");
+  body.className = "spider-swing-body";
+  body.textContent = "🦸‍♂️";
+  body.style.fontSize = `${fontSize}px`;
+
+  root.appendChild(thread);
+  root.appendChild(body);
+  root.style.top = `${topPct}%`;
+
+  document.body.appendChild(root);
+
+  const startVw = goRight ? -22 : 122;
+  const endVw = goRight ? 122 : -22;
+  const midVw = startVw * 0.5 + endVw * 0.5;
+  const swingMag = 8 + Math.random() * 16;
+  const midRot = goRight ? swingMag : -swingMag;
+
+  const anim = root.animate(
+    [
+      { transform: `translateX(${startVw}vw) rotate(0deg)` },
+      { transform: `translateX(${midVw}vw) rotate(${midRot}deg)`, offset: 0.5 },
+      { transform: `translateX(${endVw}vw) rotate(0deg)` },
+    ],
+    { duration, easing: "ease-in-out" }
+  );
+  anim.onfinish = () => root.remove();
+  anim.oncancel = () => root.remove();
 }
 
 function playIntro() {
@@ -162,27 +302,12 @@ function renderMC(screen, q) {
 
   const choices = el("div", "choices");
   const buttons = [];
-  const feedback = el("div", "choice-error");
 
-  function updateNextState({
-    rotateWrongMessage = false,
-    rotateCorrectMessage = false,
-  } = {}) {
+  function updateNextState() {
     const selected = state.answers[state.qIndex];
     const hasAnswer = selected !== undefined;
     const isCorrect = isCorrectChoice(q, selected);
     next.disabled = q.requireCorrect ? !isCorrect : !hasAnswer;
-
-    if (!q.requireCorrect || !hasAnswer) {
-      setChoiceFeedback(feedback, "");
-    } else if (isCorrect) {
-      const message = rotateCorrectMessage
-        ? nextCorrectAnswerMessage()
-        : currentCorrectAnswerMessage();
-      setChoiceFeedback(feedback, message, { success: true });
-    } else if (rotateWrongMessage || !feedback.textContent) {
-      setChoiceFeedback(feedback, nextWrongAnswerMessage());
-    }
   }
 
   q.choices.forEach((c, i) => {
@@ -194,12 +319,14 @@ function renderMC(screen, q) {
       state.answers[state.qIndex] = i;
       buttons.forEach((b) => b.classList.remove("selected"));
       btn.classList.add("selected");
-      const isRequiredWrong = q.requireCorrect && !isCorrectChoice(q, i);
-      const isRequiredCorrect = q.requireCorrect && isCorrectChoice(q, i);
-      updateNextState({
-        rotateWrongMessage: isRequiredWrong,
-        rotateCorrectMessage: isRequiredCorrect,
-      });
+      if (q.requireCorrect) {
+        if (isCorrectChoice(q, i)) {
+          showFeedbackSplash(nextCorrectAnswerMessage(), { success: true });
+        } else {
+          showFeedbackSplash(nextWrongAnswerMessage());
+        }
+      }
+      updateNextState();
       updatePointTracker();
       persist();
     });
@@ -207,11 +334,6 @@ function renderMC(screen, q) {
     choices.appendChild(btn);
   });
   screen.appendChild(choices);
-
-  if (q.requireCorrect) {
-    feedback.setAttribute("aria-live", "polite");
-    screen.appendChild(feedback);
-  }
 
   const next = nextButton();
   updateNextState();
@@ -223,9 +345,46 @@ function isCorrectChoice(q, choiceIndex) {
   return accepted.includes(choiceIndex);
 }
 
-function setChoiceFeedback(feedback, message, { success = false } = {}) {
-  feedback.textContent = message;
-  feedback.classList.toggle("success", Boolean(message && success));
+let activeFeedbackSplash = null;
+let feedbackSplashHideTimer = null;
+let feedbackSplashRemoveTimer = null;
+
+function clearFeedbackSplash() {
+  if (feedbackSplashHideTimer) {
+    clearTimeout(feedbackSplashHideTimer);
+    feedbackSplashHideTimer = null;
+  }
+  if (feedbackSplashRemoveTimer) {
+    clearTimeout(feedbackSplashRemoveTimer);
+    feedbackSplashRemoveTimer = null;
+  }
+  if (activeFeedbackSplash && activeFeedbackSplash.parentNode) {
+    activeFeedbackSplash.parentNode.removeChild(activeFeedbackSplash);
+  }
+  activeFeedbackSplash = null;
+}
+
+function showFeedbackSplash(message, { success = false } = {}) {
+  if (!message) return;
+  clearFeedbackSplash();
+  const splash = el("div", `feedback-splash${success ? " success" : ""}`, message);
+  splash.setAttribute("role", "status");
+  splash.setAttribute("aria-live", "polite");
+  document.body.appendChild(splash);
+  // Force reflow so the entry transition runs.
+  void splash.offsetWidth;
+  splash.classList.add("show");
+  activeFeedbackSplash = splash;
+  feedbackSplashHideTimer = setTimeout(() => {
+    feedbackSplashHideTimer = null;
+    splash.classList.remove("show");
+    splash.classList.add("leave");
+    feedbackSplashRemoveTimer = setTimeout(() => {
+      feedbackSplashRemoveTimer = null;
+      if (splash.parentNode) splash.parentNode.removeChild(splash);
+      if (activeFeedbackSplash === splash) activeFeedbackSplash = null;
+    }, 320);
+  }, 1300);
 }
 
 function currentCorrectAnswerMessage() {
@@ -602,6 +761,7 @@ function startMatchDrag(e, leftId) {
 
   activeMatchDrag.source.classList.add("drawing-source");
   activeMatchDrag.grid.classList.add("drawing");
+  document.body.classList.add("match-dragging");
 
   if (activeMatchDrag.source.setPointerCapture) {
     activeMatchDrag.source.setPointerCapture(e.pointerId);
@@ -610,6 +770,9 @@ function startMatchDrag(e, leftId) {
   window.addEventListener("pointermove", onMatchPointerMove);
   window.addEventListener("pointerup", onMatchPointerUp);
   window.addEventListener("pointercancel", onMatchPointerCancel);
+  document.addEventListener("touchmove", preventScrollWhileDragging, {
+    passive: false,
+  });
 
   redrawMatchLines();
   createMatchPreview();
@@ -760,9 +923,13 @@ function finishMatchDrag({ renderAfter = false } = {}) {
   window.removeEventListener("pointermove", onMatchPointerMove);
   window.removeEventListener("pointerup", onMatchPointerUp);
   window.removeEventListener("pointercancel", onMatchPointerCancel);
+  document.removeEventListener("touchmove", preventScrollWhileDragging, {
+    passive: false,
+  });
 
   drag.source.classList.remove("drawing-source");
   drag.grid.classList.remove("drawing");
+  document.body.classList.remove("match-dragging");
   if (drag.dropTarget) drag.dropTarget.classList.remove("drop-target");
 
   activeMatchDrag = null;
@@ -773,6 +940,11 @@ function finishMatchDrag({ renderAfter = false } = {}) {
 
 function cancelActiveMatchDrag() {
   if (activeMatchDrag) finishMatchDrag();
+}
+
+function preventScrollWhileDragging(e) {
+  if (!activeMatchDrag) return;
+  if (e.cancelable) e.preventDefault();
 }
 
 function getLeftAnchor(leftCell, gridRect) {
@@ -1051,3 +1223,4 @@ function handleArrowNavigation(e) {
 })();
 
 render();
+startSpiderTeasers();
