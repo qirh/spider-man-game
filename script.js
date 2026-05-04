@@ -313,7 +313,7 @@ function renderMC(screen, q) {
 
   q.choices.forEach((c, i) => {
     const btn = el("button", "choice");
-    btn.appendChild(el("span", "choice-num", String(i + 1)));
+    btn.appendChild(el("span", "choice-num", choiceShortcutLabel(i)));
     btn.appendChild(el("span", "choice-text", c));
     if (state.answers[state.qIndex] === i) btn.classList.add("selected");
     btn.addEventListener("click", () => {
@@ -339,6 +339,26 @@ function renderMC(screen, q) {
   const next = nextButton();
   updateNextState();
   screen.appendChild(next);
+}
+
+function choiceShortcutLabel(i) {
+  if (i < 9) return String(i + 1);
+  const letterIndex = i - 9;
+  if (letterIndex < 26) return String.fromCharCode(97 + letterIndex);
+  return String(i + 1);
+}
+
+function choiceIndexFromKey(key, choiceCount) {
+  if (/^[1-9]$/.test(key)) {
+    const idx = parseInt(key, 10) - 1;
+    return idx < choiceCount ? idx : -1;
+  }
+  if (/^[a-zA-Z]$/.test(key) && choiceCount > 9) {
+    const letterIndex = key.toLowerCase().charCodeAt(0) - 97;
+    const idx = 9 + letterIndex;
+    return idx < choiceCount ? idx : -1;
+  }
+  return -1;
 }
 
 function isCorrectChoice(q, choiceIndex) {
@@ -478,9 +498,11 @@ function getPairs() {
 }
 
 function renderMatch(screen, q) {
+  clearKbMatchPending();
   screen.appendChild(el("div", "q-text", q.prompt));
+  const baseHelp = q.help || "Draw a line from each item to its match.";
   screen.appendChild(
-    el("div", "match-help", q.help || "Draw a line from each item to its match."),
+    el("div", "match-help", `${baseHelp} On a keyboard, type a number then a letter (e.g. "1a") to pair.`),
   );
 
   const pairs = getPairs();
@@ -505,9 +527,10 @@ function renderMatch(screen, q) {
     n++;
   }
 
-  q.left.forEach((item) => {
+  q.left.forEach((item, i) => {
     const cell = el("button", "match-item");
     cell.dataset.leftId = item.id;
+    cell.appendChild(el("span", "match-kb-shortcut", `${i + 1}`));
     renderMatchItemContent(cell, item);
     if (pairs[item.id]) {
       cell.classList.add("matched");
@@ -518,9 +541,12 @@ function renderMatch(screen, q) {
     leftCol.appendChild(cell);
   });
 
-  q.right.forEach((item) => {
+  q.right.forEach((item, i) => {
     const cell = el("button", "match-item");
     cell.dataset.rightId = item.id;
+    cell.appendChild(
+      el("span", "match-kb-shortcut", String.fromCharCode(97 + i)),
+    );
     renderMatchItemContent(cell, item);
     const matchedLeft = Object.keys(pairs).find((k) => pairs[k] === item.id);
     if (matchedLeft) {
@@ -719,7 +745,7 @@ function buildAboutBlock() {
       Feel free to play it, I'd love any feedback you have, please email it to me.
     </p>
     <p>
-      And if you are in the NYC area and you did well in the quiz,
+      And if you are in the NYC area and you got a high score,
       I do have some prizes left from the tour (as of writing this),
       so lmk and you may possibly win a v small and tiny prize.
     </p>
@@ -857,6 +883,76 @@ function setMatchPair(leftId, rightId) {
   });
   pairs[leftId] = rightId;
   persist();
+}
+
+let kbMatchPending = { left: null, right: null };
+
+function clearKbMatchPending() {
+  kbMatchPending.left = null;
+  kbMatchPending.right = null;
+  document
+    .querySelectorAll(".match-item.kb-pending")
+    .forEach((el) => el.classList.remove("kb-pending"));
+}
+
+function updateKbMatchHighlights(q) {
+  document
+    .querySelectorAll(".match-item.kb-pending")
+    .forEach((el) => el.classList.remove("kb-pending"));
+  if (kbMatchPending.left != null) {
+    const item = q.left[kbMatchPending.left];
+    const cell = item && document.querySelector(`[data-left-id="${item.id}"]`);
+    if (cell) cell.classList.add("kb-pending");
+  }
+  if (kbMatchPending.right != null) {
+    const item = q.right[kbMatchPending.right];
+    const cell = item && document.querySelector(`[data-right-id="${item.id}"]`);
+    if (cell) cell.classList.add("kb-pending");
+  }
+}
+
+function tryKbMatchPair(q) {
+  if (kbMatchPending.left == null || kbMatchPending.right == null) return;
+  const leftItem = q.left[kbMatchPending.left];
+  const rightItem = q.right[kbMatchPending.right];
+  if (!leftItem || !rightItem) return;
+  setMatchPair(leftItem.id, rightItem.id);
+  kbMatchPending.left = null;
+  kbMatchPending.right = null;
+  render();
+}
+
+function handleMatchKeyboard(q, e) {
+  if (e.altKey || e.ctrlKey || e.metaKey) return false;
+
+  if (e.key === "Escape" || e.key === "Backspace") {
+    if (kbMatchPending.left == null && kbMatchPending.right == null) return false;
+    e.preventDefault();
+    clearKbMatchPending();
+    return true;
+  }
+
+  if (/^[1-9]$/.test(e.key)) {
+    const idx = parseInt(e.key, 10) - 1;
+    if (idx >= q.left.length) return false;
+    e.preventDefault();
+    kbMatchPending.left = idx;
+    updateKbMatchHighlights(q);
+    tryKbMatchPair(q);
+    return true;
+  }
+
+  if (/^[a-zA-Z]$/.test(e.key)) {
+    const idx = e.key.toLowerCase().charCodeAt(0) - 97;
+    if (idx >= q.right.length) return false;
+    e.preventDefault();
+    kbMatchPending.right = idx;
+    updateKbMatchHighlights(q);
+    tryKbMatchPair(q);
+    return true;
+  }
+
+  return false;
 }
 
 function renderPointTracker(q) {
@@ -1177,23 +1273,30 @@ document.addEventListener("keydown", (e) => {
   if (state.screen === "question") {
     const q = QUESTIONS[state.qIndex];
     if (q.type === "mc") {
-      const num = parseInt(e.key, 10);
-      if (num >= 1 && num <= q.choices.length) {
+      const idx = choiceIndexFromKey(e.key, q.choices.length);
+      if (idx >= 0) {
         e.preventDefault();
         const choiceEls = document.querySelectorAll(".choices .choice");
-        const target = choiceEls[num - 1];
+        const target = choiceEls[idx];
         if (target) target.click();
         return;
       }
     }
+    if (q.type === "match") {
+      if (handleMatchKeyboard(q, e)) return;
+    }
   }
 
   if (e.key === "Enter") {
-    // If focus is on a specific control (back, choice, hint, etc.), let
-    // the browser activate that control instead of hijacking to the
-    // primary button.
-    const focusedTag = e.target.tagName;
-    if (focusedTag === "BUTTON" || focusedTag === "A" || focusedTag === "SELECT") {
+    const focused = e.target;
+    const focusedTag = focused.tagName;
+    if (focusedTag === "SELECT") return;
+    if (focusedTag === "A") return;
+    if (
+      focused.classList &&
+      (focused.classList.contains("back-btn") ||
+        focused.classList.contains("hint-btn"))
+    ) {
       return;
     }
     const btn = document.querySelector(".btn-bottom:not(:disabled)");

@@ -1043,3 +1043,37 @@ body.match-dragging .match-item {
 .about-block a:visited {
   color: var(--spider-red);
 }
+
+/* ---------- Match keyboard shortcuts ---------- */
+.match-kb-shortcut {
+  position: absolute;
+  top: 6px;
+  left: 8px;
+  z-index: 2;
+  font-family: "Marvel", "Bangers", cursive;
+  font-size: 13px;
+  letter-spacing: 1px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(10, 10, 10, 0.65);
+  color: var(--spider-white);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+.match-item.kb-pending {
+  background-color: rgba(230, 36, 41, 0.35);
+  border-color: var(--spider-red);
+}
+
+.match-image-item.kb-pending {
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(194, 24, 7, 0.18) 0%,
+      rgba(194, 24, 7, 0.46) 48%,
+      rgba(82, 9, 8, 0.92) 100%
+    ),
+    var(--match-image);
+}
