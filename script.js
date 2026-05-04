@@ -146,6 +146,7 @@ function renderWelcome() {
   const btn = el("button", "btn btn-bottom", "BEGIN");
   btn.addEventListener("click", startQuiz);
   screen.appendChild(btn);
+  screen.appendChild(buildAboutBlock());
   app.appendChild(screen);
 
   if (!introPlayed) {
@@ -696,7 +697,34 @@ function renderResults() {
   restart.addEventListener("click", startQuiz);
   screen.appendChild(restart);
 
+  screen.appendChild(buildAboutBlock());
+
   app.appendChild(screen);
+}
+
+function buildAboutBlock() {
+  const about = el("div", "about-block");
+  about.innerHTML = `
+    <p>
+      This game was made by me, Saleh
+      (<a href="mailto:saleh@alghusson.com">saleh@alghusson.com</a>).
+      The purpose was to have an interactive activity during my tour
+      <a
+        href="https://www.mas.org/events/a-friendly-neighborhood-tour-of-sunnyside-with-a-focus-on-spider-man/"
+        target="_blank"
+        rel="noopener"
+        >A Friendly Neighborhood Tour of Sunnyside (with a focus on Spider-Man)</a
+      >
+      as part of Jane's Walk festival 2026 in NYC.
+      Feel free to play it, I'd love any feedback you have, please email it to me.
+    </p>
+    <p>
+      And if you are in the NYC area and you did well in the quiz,
+      I do have some prizes left from the tour (as of writing this),
+      so lmk and you may possibly win a v small and tiny prize.
+    </p>
+  `;
+  return about;
 }
 
 function el(tag, cls, text) {

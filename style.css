@@ -1016,3 +1016,30 @@ body.match-dragging .match-item {
 .breakdown-row .mark.wrong {
   color: var(--spider-red);
 }
+
+/* ---------- About / attribution block ---------- */
+.about-block {
+  margin-top: 28px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.about-block p {
+  margin: 0 0 8px;
+}
+
+.about-block p:last-child {
+  margin-bottom: 0;
+}
+
+.about-block a {
+  color: var(--spider-red);
+  text-decoration: underline;
+}
+
+.about-block a:visited {
+  color: var(--spider-red);
+}
